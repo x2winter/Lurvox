@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/loader/script/:id",
+      "destination": "/api/obfuscate?id=:id"
+    }
+  ]
+}
