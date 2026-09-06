@@ -49,7 +49,6 @@ export default async function handler(req, res) {
         });
       }
 
-      // ส่ง Source Code ต้นฉบับไป Obfuscate
       const obfResponse = await fetch(
         'https://goofyscator.lua.cz/obfuscate',
         {
@@ -89,7 +88,6 @@ export default async function handler(req, res) {
       let saved = false;
       let lastError = '';
 
-      // สุ่ม ID ความยาว 32 ตัวอักษร
       for (let attempt = 0; attempt < 5; attempt++) {
         id = generateRandomID(32);
 
@@ -104,7 +102,7 @@ export default async function handler(req, res) {
             body: JSON.stringify({
               id,
               code: obfData.result,
-              source, // เก็บต้นฉบับไว้ใน Database เท่านั้น
+              source,
               created_at: Date.now()
             })
           }
@@ -145,11 +143,12 @@ export default async function handler(req, res) {
   }
 
   // ==========================================
-  // GET: ดึงเฉพาะ Obfuscated Code ผ่าน /loader/script/:id
+  // GET: ตรวจสอบ User-Agent
+  // - หากมาจาก Roblox Executor/Roblox-Console -> ส่งเฉพาะ Obfuscated Code (Plain Text)
+  // - หากเปิดผ่าน Web Browser -> ส่งหน้าเว็บ HTML ที่กำหนดไว้
   // ==========================================
   if (req.method === 'GET') {
     try {
-      // ดึง ID จาก Parameter ที่ Vercel Rewrite ส่งมา (id, scriptId หรือ path param)
       const id = req.query.id || req.query.scriptId;
 
       if (!id) {
@@ -159,7 +158,6 @@ export default async function handler(req, res) {
 
       const safeId = encodeURIComponent(id);
 
-      // ดึงเฉพาะคอลัมน์ code ออกมาจาก Database เท่านั้น
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?id=eq.${safeId}&select=code`,
         {
@@ -182,9 +180,202 @@ export default async function handler(req, res) {
         return res.status(404).send("warn('Script not found or removed')");
       }
 
-      // ส่งคืนเฉพาะโค้ดที่ Obfuscate แล้วเสมอ
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      return res.status(200).send(data.code);
+      const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+      const isRobloxExecutor = userAgent.includes('roblox') || userAgent.includes('synapse') || userAgent.includes('krnl') || userAgent.includes('fluxus') || userAgent.includes('scriptware') || userAgent.includes('httpget');
+
+      // 1. ถ้าเรียกจาก Executor ให้ส่ง Plain Text Code กลับไปรันในเกม
+      if (isRobloxExecutor) {
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        return res.status(200).send(data.code);
+      }
+
+      // 2. ถ้าเปิดผ่าน Browser ปกติ ให้ส่งหน้า UI HTML
+      const htmlContent = `<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loadstring</title>
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    background: #191b30;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    width: 82%;
+    max-width: 350px;
+}
+
+.title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.title .icon {
+    font-size: 19px;
+}
+
+.title h1 {
+    font-size: 21px;
+    font-weight: 700;
+}
+
+.code-box {
+    position: relative;
+    width: 100%;
+    height: 100px;
+    background: #0d101f;
+    border: 1px solid #22263c;
+    border-radius: 13px;
+    padding: 17px 13px;
+    overflow: hidden;
+}
+
+.code-scroll {
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+}
+
+.code-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+pre {
+    width: max-content;
+    white-space: pre;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 11px;
+    line-height: 1.75;
+    color: #d7d9e3;
+}
+
+.variable { color: #d7d9e3; }
+.function { color: #55a5dc; }
+.string { color: #c99a86; }
+.comment { color: #70a85b; }
+
+.copy-btn {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 9px;
+    background: #282d52;
+    color: #eee;
+    font-size: 11px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.copy-btn:active {
+    transform: scale(.95);
+}
+
+.info {
+    text-align: center;
+    margin-top: 11px;
+    color: #dedee5;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.info-url {
+    color: #dedee5;
+}
+
+@media(max-width:600px) {
+    .container {
+        width: 80%;
+        max-width: 340px;
+    }
+    .title h1 {
+        font-size: 20px;
+    }
+    .title .icon {
+        font-size: 18px;
+    }
+    .code-box {
+        height: 98px;
+    }
+    pre {
+        font-size: 11px;
+    }
+    .info {
+        font-size: 11px;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="title">
+        <span class="icon">📜</span>
+        <h1>Loadstring</h1>
+    </div>
+
+    <div class="code-box">
+        <button class="copy-btn" id="copyButton" onclick="copyCode()">Copy</button>
+        <div class="code-scroll">
+            <pre id="code"></pre>
+        </div>
+    </div>
+
+    <div class="info">
+        This code is protected by lurvox •<br>
+        <span class="info-url">https://lurvox-security.vercel.app</span>
+    </div>
+</div>
+
+<script>
+const currentUrl = window.location.href;
+
+const codeHTML =
+\`<span class="variable">script_key</span> = <span class="string">"KEY"</span>;
+<span class="function">loadstring</span>(game:<span class="function">HttpGet</span>(<span class="string">"\${currentUrl}"</span>))()\`;
+
+document.getElementById("code").innerHTML = codeHTML;
+
+function copyCode() {
+    const text =
+\`-- // Lurvox_Security_Service";
+loadstring(game:HttpGet("\${currentUrl}"))()\`;
+
+    navigator.clipboard.writeText(text);
+
+    const button = document.getElementById("copyButton");
+    button.innerText = "Copied!";
+
+    setTimeout(() => {
+        button.innerText = "Copy";
+    }, 1200);
+}
+</script>
+
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(200).send(htmlContent);
 
     } catch (error) {
       console.error('GET API ERROR:', error);
