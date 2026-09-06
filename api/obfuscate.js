@@ -9,6 +9,9 @@ function generateRandomID(length = 32) {
   return result;
 }
 
+// ฟังก์ชันช่วยสำหรับการทำดีเลย์ (ms = มิลลิวินาที)
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -40,6 +43,9 @@ export default async function handler(req, res) {
   // ==========================================
   if (req.method === 'POST') {
     try {
+      // ⏳ หน่วงเวลาก่อนเริ่มประมวลผล POST (เช่น 1 วินาที เพื่อป้องกัน Rate Limit API)
+      await delay(1000);
+
       const { source, settings } = req.body || {};
 
       if (!source || typeof source !== 'string') {
@@ -116,6 +122,9 @@ export default async function handler(req, res) {
         }
 
         lastError = `HTTP ${dbResponse.status}: ${responseText}`;
+
+        // ⏳ หน่วงเวลา 500ms ก่อน Retry ครั้งถัดไปหากบันทึก DB ไม่สำเร็จ
+        await delay(500);
       }
 
       if (!saved) {
@@ -144,8 +153,6 @@ export default async function handler(req, res) {
 
   // ==========================================
   // GET: ตรวจสอบ User-Agent
-  // - หากมาจาก Roblox Executor/Roblox-Console -> ส่งเฉพาะ Obfuscated Code (Plain Text)
-  // - หากเปิดผ่าน Web Browser -> ส่งหน้าเว็บ HTML ที่กำหนดไว้
   // ==========================================
   if (req.method === 'GET') {
     try {
@@ -286,7 +293,12 @@ pre {
     z-index: 10;
 }
 
-.copy-btn:active {
+.copy-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.copy-btn:active:not(:disabled) {
     transform: scale(.95);
 }
 
@@ -355,7 +367,11 @@ const codeHTML =
 
 document.getElementById("code").innerHTML = codeHTML;
 
+let isCooldown = false;
+
 function copyCode() {
+    if (isCooldown) return;
+
     const text =
 \`-- // Lurvox_Security_Service";
 loadstring(game:HttpGet("\${currentUrl}"))()\`;
@@ -363,11 +379,24 @@ loadstring(game:HttpGet("\${currentUrl}"))()\`;
     navigator.clipboard.writeText(text);
 
     const button = document.getElementById("copyButton");
-    button.innerText = "Copied!";
+    isCooldown = true;
+    button.disabled = true;
 
-    setTimeout(() => {
-        button.innerText = "Copy";
-    }, 1200);
+    // ⏳ สั่งนับถอยหลัง ดีเลย์ปุ่ม Copy 4 วินาที
+    let timeLeft = 4;
+    button.innerText = \`Wait \${timeLeft}s\`;
+
+    const timer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft > 0) {
+            button.innerText = \`Wait \${timeLeft}s\`;
+        } else {
+            clearInterval(timer);
+            isCooldown = false;
+            button.disabled = false;
+            button.innerText = "Copy";
+        }
+    }, 1000);
 }
 </script>
 
