@@ -1,19 +1,17 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#030712">
 
 <title>LURVOX • Security Service</title>
+
 <!-- Font & Icons -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<!-- Cloudflare Turnstile Script -->
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
 <style>
 :root {
@@ -134,6 +132,18 @@ body {
     margin-bottom: 30px;
 }
 
+.ascii-banner {
+    font-family: 'Fira Code', monospace;
+    font-size: clamp(8px, 1.3vw, 13px);
+    line-height: 1.1;
+    white-space: pre;
+    color: var(--primary);
+    text-shadow: 0 0 15px var(--primary-glow);
+    display: inline-block;
+    margin-bottom: 15px;
+    user-select: none;
+}
+
 .hero h1 {
     font-size: clamp(28px, 4vw, 42px);
     font-weight: 800;
@@ -228,16 +238,10 @@ body {
 
 .btn-clear:hover { color: var(--error); }
 
-/* Cloudflare Turnstile Box */
-.cf-turnstile-container {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0;
-}
-
 /* Action Button */
 .btn-submit {
     width: 100%;
+    margin-top: 16px;
     padding: 16px;
     border: none;
     border-radius: 14px;
@@ -368,6 +372,7 @@ footer {
     .card { padding: 18px; }
     .input-copy-group { flex-direction: column; }
     .btn-copy { padding: 10px; }
+    .ascii-banner { font-size: 6px; }
 }
 </style>
 </head>
@@ -377,7 +382,6 @@ footer {
 <nav class="navbar">
     <a href="/" class="brand">
         <div class="brand-icon">
-            <!-- เปลี่ยน URL รูปภาพโลโก้ของคุณตรงนี้ -->
             <img src="/logo.png" alt="Lurvox Logo">
         </div>
         LURVOX<span>PROJECT</span>
@@ -390,15 +394,26 @@ footer {
 <main class="main-container">
 
     <div class="hero">
+        <pre class="ascii-banner">
+██▓     █    ██  ██▀███   ██▒   █▓ ▒█████  ▒██   ██▒   
+▓██▒     ██  ▓██▒▓██ ▒ ██▒▓██░   █▒▒██▒  ██▒▒▒ █ █ ▒░   
+▒██░    ▓██  ▒██░▓██ ░▄█ ▒ ▓██  █▒░▒██░  ██▒░░  █   ░   
+▒██░    ▓▓█  ░██░▒██▀▀█▄    ▒██ █░░▒██   ██░ ░ █ █ ▒    
+░██████▒▒▒█████▓ ░██▓ ▒██▒   ▒▀█░  ░ ████▓▒░▒██▒ ▒██▒   
+░ ▒░▓  ░░▒▓▒ ▒ ▒ ░ ▒▓ ░▒▓░   ░ ▐░  ░ ▒░▒░▒░ ▒▒ ░ ░▓ ░   
+░ ░ ▒  ░░░▒░ ░ ░   ░▒ ░ ▒░   ░ ░░    ░ ▒ ▒░ ░░   ░▒ ░   
+  ░ ░    ░░░ ░ ░   ░░   ░      ░░  ░ ░ ░ ▒   ░    ░     
+    ░  ░   ░        ░           ░      ░ ░   ░    ░     
+                               ░                        </pre>
         <h1>Lua Obfuscator Service</h1>
-        <p>ยกระดับความปลอดภัยให้สคริปต์ของคุณด้วยระบบป้องกันและตรวจสอบ Cloudflare</p>
+        <p>Enhance your script security with our advanced protection system</p>
     </div>
 
     <div class="card">
         <div class="upload-zone">
             <label class="upload-label">
                 <i class="fa-solid fa-file-arrow-up" style="font-size: 18px; color: var(--primary);"></i>
-                <span>อัปโหลดไฟล์ Script (.txt, .lua)</span>
+                <span>Upload Script File (.txt, .lua)</span>
                 <input type="file" id="fileInput" accept=".txt,.lua" onchange="loadScriptFile(event)">
             </label>
         </div>
@@ -407,25 +422,20 @@ footer {
             id="scriptInput"
             class="editor"
             spellcheck="false"
-            placeholder="-- วางสคริปต์ Lua ของคุณที่นี่..."
+            placeholder="-- Paste your Lua script here..."
         ></textarea>
 
         <div class="editor-footer">
-            <span id="counter">0 ตัวอักษร</span>
-            <button class="btn-clear" onclick="clearScript()"><i class="fa-solid fa-trash"></i> ล้างข้อมูล</button>
+            <span id="counter">0 characters</span>
+            <button class="btn-clear" onclick="clearScript()"><i class="fa-solid fa-trash"></i> Clear</button>
         </div>
 
-        <!-- Cloudflare Turnstile Verification -->
-        <div class="cf-turnstile-container">
-            <div class="cf-turnstile" data-sitekey="YOUR_CLOUDFLARE_SITE_KEY" data-callback="onTurnstileSuccess"></div>
-        </div>
-
-        <button id="createButton" class="btn-submit" onclick="createScript()">
+        <butService"createButton" class="btn-submit" onclick="createScript()">
             <i class="fa-solid fa-bolt"></i> Obfuscate & Create Script
         </button>
 
         <div id="status" class="status-box">
-            <i class="fa-solid fa-circle-info"></i> สถานะ: พร้อมใช้งาน
+            <i class="fa-solid fa-circle-info"></i> Status: Ready
         </div>
 
         <div id="result" class="result-container">
@@ -438,7 +448,7 @@ footer {
                 <div class="result-label">RAW URL</div>
                 <div class="input-copy-group">
                     <input id="scriptUrl" class="result-input" readonly>
-                    <button class="btn-copy" onclick="copyText('scriptUrl', 'คัดลอก Raw URL เรียบร้อย')">คัดลอก</button>
+                    <button class="btn-copy" onclick="copyText('scriptUrl', 'Raw URL copied successfully!')">Copy</button>
                 </div>
             </div>
 
@@ -446,7 +456,7 @@ footer {
                 <div class="result-label">LOADSTRING</div>
                 <div class="input-copy-group">
                     <input id="loadstringUrl" class="result-input" readonly>
-                    <button class="btn-copy" onclick="copyText('loadstringUrl', 'คัดลอก Loadstring เรียบร้อย')">คัดลอก</button>
+                    <button class="btn-copy" onclick="copyText('loadstringUrl', 'Loadstring copied successfully!')">Copy</button>
                 </div>
             </div>
         </div>
@@ -460,7 +470,6 @@ footer {
 
 <script>
 const API_URL = "/api/obfuscate";
-let cfToken = "";
 
 const scriptInput = document.getElementById("scriptInput");
 const counter = document.getElementById("counter");
@@ -474,11 +483,7 @@ const loadstringUrl = document.getElementById("loadstringUrl");
 scriptInput.addEventListener("input", updateCounter);
 
 function updateCounter() {
-    counter.textContent = scriptInput.value.length.toLocaleString() + " ตัวอักษร";
-}
-
-function onTurnstileSuccess(token) {
-    cfToken = token;
+    counter.textContent = scriptInput.value.length.toLocaleString() + " characters";
 }
 
 function loadScriptFile(event) {
@@ -489,10 +494,10 @@ function loadScriptFile(event) {
     reader.onload = function(e) {
         scriptInput.value = e.target.result;
         updateCounter();
-        setStatus("โหลดไฟล์ " + file.name + " สำเร็จ", "success");
+        setStatus("Loaded file: " + file.name, "success");
     };
     reader.onerror = function() {
-        setStatus("อ่านไฟล์ไม่สำเร็จ", "error");
+        setStatus("Failed to read file", "error");
     };
     reader.readAsText(file);
     event.target.value = "";
@@ -502,28 +507,28 @@ function clearScript() {
     scriptInput.value = "";
     updateCounter();
     resultBox.classList.remove("show");
-    setStatus("พร้อมใช้งาน");
+    setStatus("Ready");
 }
 
 function setStatus(message, type = "") {
     statusBox.className = "status-box " + type;
     const icon = type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-xmark" : "fa-circle-info";
-    statusBox.innerHTML = `<i class="fa-solid ${icon}"></i> สถานะ: ${message}`;
+    statusBox.innerHTML = `<i class="fa-solid ${icon}"></i> Status: ${message}`;
 }
 
 async function createScript() {
     const source = scriptInput.value.trim();
 
     if (!source) {
-        setStatus("กรุณาใส่ Lua Script ก่อน", "error");
+        setStatus("Please enter Lua script first", "error");
         scriptInput.focus();
         return;
     }
 
     createButton.disabled = true;
-    createButton.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลัง Obfuscate...`;
+    createButton.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing Obfuscation...`;
     resultBox.classList.remove("show");
-    setStatus("กำลังประมวลผล Script...");
+    setStatus("Processing Script...");
 
     try {
         const response = await fetch(API_URL, {
@@ -531,7 +536,6 @@ async function createScript() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 source: source,
-                cfToken: cfToken,
                 settings: {
                     encryptStrings: true,
                     proxifyLocals: true,
@@ -562,7 +566,7 @@ async function createScript() {
         loadstringUrl.value = data.loadstring || "";
 
         resultBox.classList.add("show");
-        setStatus("สร้าง Script สำเร็จ!", "success");
+        setStatus("Script Created Successfully!", "success");
 
     } catch (error) {
         console.error(error);
