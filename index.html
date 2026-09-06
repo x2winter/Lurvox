@@ -3,323 +3,371 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#080808">
+<meta name="theme-color" content="#030712">
 
-<title>LURVOX • Dashboard</title>
+<title>LURVOX • Security Service</title>
+<!-- Font & Icons -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Cloudflare Turnstile Script -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-
-:root{
-    --blue:#00bfff;
-    --blue-dark:#1455d9;
-    --bg:#060606;
-    --card:#111;
-    --border:#292929;
-    --text:#f5f5f5;
-    --muted:#888;
+:root {
+    --primary: #00f0ff;
+    --primary-glow: rgba(0, 240, 255, 0.35);
+    --bg: #030712;
+    --card-bg: rgba(15, 23, 42, 0.65);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --input-bg: rgba(2, 6, 23, 0.8);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --success: #10b981;
+    --error: #ef4444;
 }
 
-body{
-    min-height:100vh;
-    background:radial-gradient(circle at 50% -15%,#082d4a 0%,#07182c 25%,#090909 55%,#050505 100%);
-    color:var(--text);
-    font-family:Arial,Helvetica,sans-serif;
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-.navbar{
-    height:65px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 7%;
-    border-bottom:1px solid #202020;
-    background:rgba(5,5,5,.8);
-    backdrop-filter:blur(12px);
-    position:sticky;
-    top:0;
-    z-index:100;
+body {
+    min-height: 100vh;
+    background-color: var(--bg);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(0, 240, 255, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.12) 0px, transparent 50%);
+    color: var(--text-main);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    display: flex;
+    flex-direction: column;
 }
 
-.brand{
-    display:flex;
-    align-items:center;
-    gap:9px;
-    color:var(--text);
-    text-decoration:none;
-    font-size:19px;
-    font-weight:1000;
-    letter-spacing:3px;
+/* Header Navbar */
+.navbar {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8%;
+    background: rgba(3, 7, 18, 0.8);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--card-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-.brand-logo{
-    width:34px;
-    height:34px;
-    object-fit:contain;
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--text-main);
 }
 
-.brand span{color:var(--blue)}
-
-.nav-status{
-    display:flex;
-    align-items:center;
-    gap:7px;
-    color:#777;
-    font-size:11px;
+.brand-icon {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #000;
+    border: 1px solid var(--card-border);
 }
 
-.dot{
-    width:7px;
-    height:7px;
-    border-radius:50%;
-    background:#40d46b;
-    box-shadow:0 0 10px #40d46b;
+.brand-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-.hero{
-    text-align:center;
-    padding:70px 20px 45px;
+.brand span { color: var(--primary); }
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--success);
 }
 
-.logo{
-    color:var(--blue);
-    font-family:monospace;
-    font-size:clamp(6px,1.5vw,13px);
-    line-height:1.08;
-    font-weight:900;
-    white-space:pre;
-    overflow:auto;
-    display:inline-block;
-    text-align:left;
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 10px var(--success);
+    animation: pulse 2s infinite;
 }
 
-.hub{
-    margin-top:10px;
-    font-size:29px;
-    font-weight:1000;
-    letter-spacing:11px;
+@keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.8; }
 }
 
-.hero-text{
-    max-width:550px;
-    margin:15px auto 0;
-    color:#777;
-    font-size:13px;
-    line-height:1.7;
+/* Main Layout */
+.main-container {
+    flex: 1;
+    width: 90%;
+    max-width: 950px;
+    margin: 40px auto;
 }
 
-.container{
-    width:92%;
-    max-width:900px;
-    margin:auto;
+.hero {
+    text-align: center;
+    margin-bottom: 30px;
 }
 
-.card{
-    background:linear-gradient(145deg,rgba(23,23,23,.95),rgba(9,9,9,.95));
-    border:1px solid var(--border);
-    border-radius:18px;
-    padding:20px;
-    margin-bottom:18px;
-    box-shadow:0 15px 50px rgba(0,0,0,.3);
+.hero h1 {
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff 30%, var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
 }
 
-.card-title{
-    font-size:17px;
-    font-weight:900;
-    margin-bottom:5px;
+.hero p {
+    color: var(--text-muted);
+    font-size: 14px;
 }
 
-.card-subtitle{
-    color:#666;
-    font-size:11px;
-    margin-bottom:17px;
+/* Card Section */
+.card {
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
 
-.upload-box{
-    margin-bottom:12px;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    background:#080808;
-    border:1px dashed #333;
-    padding:12px 15px;
-    border-radius:11px;
-    cursor:pointer;
+.upload-zone {
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    background: rgba(255,255,255,0.02);
+    cursor: pointer;
+    transition: 0.2s ease;
+    margin-bottom: 16px;
 }
 
-.upload-box:hover{
-    border-color:var(--blue);
+.upload-zone:hover {
+    border-color: var(--primary);
+    background: rgba(0, 240, 255, 0.03);
 }
 
-.upload-label{
-    color:#aaa;
-    font-size:12px;
-    font-weight:bold;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    width:100%;
+.upload-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
 }
 
-.upload-label input{
-    display:none;
+.upload-label input { display: none; }
+
+.editor {
+    width: 100%;
+    min-height: 280px;
+    background: var(--input-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 18px;
+    color: #38bdf8;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    outline: none;
+    resize: vertical;
+    transition: 0.2s ease;
 }
 
-.editor{
-    width:100%;
-    min-height:320px;
-    background:#050505;
-    border:1px solid #292929;
-    border-radius:13px;
-    padding:15px;
-    color:#eee;
-    outline:none;
-    resize:vertical;
-    font-family:Consolas,"Courier New",monospace;
-    font-size:13px;
-    line-height:1.6;
+.editor:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 15px var(--primary-glow);
 }
 
-.editor:focus{
-    border-color:#1769d1;
-    box-shadow:0 0 0 2px rgba(0,150,255,.06);
+.editor-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    color: var(--text-muted);
+    font-size: 12px;
 }
 
-.controls{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-top:12px;
-    gap:10px;
+.btn-clear {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.2s;
 }
 
-.counter{
-    color:#666;
-    font-size:10px;
+.btn-clear:hover { color: var(--error); }
+
+/* Cloudflare Turnstile Box */
+.cf-turnstile-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
 }
 
-.clear-btn{
-    background:#171717;
-    color:#aaa;
-    border:1px solid #292929;
-    border-radius:9px;
-    padding:8px 12px;
-    cursor:pointer;
+/* Action Button */
+.btn-submit {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primary), #2563eb);
+    color: #000;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
-.create-btn{
-    width:100%;
-    margin-top:15px;
-    padding:15px;
-    border:0;
-    border-radius:12px;
-    background:linear-gradient(135deg,#00c6ff,#1455d9);
-    color:white;
-    font-size:15px;
-    font-weight:900;
-    cursor:pointer;
+.btn-submit:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px var(--primary-glow);
 }
 
-.create-btn:disabled{
-    opacity:.5;
-    cursor:not-allowed;
+.btn-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
-.result{
-    display:none;
-    margin-top:18px;
-    padding:16px;
-    background:#090909;
-    border:1px solid #292929;
-    border-radius:13px;
+/* Status Banner */
+.status-box {
+    margin-top: 18px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--card-border);
+    color: var(--text-muted);
 }
 
-.result.show{
-    display:block;
+.status-box.success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: var(--success);
 }
 
-.result-label{
-    color:#777;
-    font-size:10px;
-    margin-bottom:6px;
-    margin-top:12px;
+.status-box.error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: var(--error);
 }
 
-.result-label:first-child{
-    margin-top:0;
+/* Result Box */
+.result-container {
+    display: none;
+    margin-top: 24px;
+    padding: 20px;
+    background: var(--input-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
 }
 
-.script-id{
-    color:var(--blue);
-    font-family:monospace;
-    font-size:26px;
-    font-weight:900;
-    letter-spacing:3px;
-    margin-bottom:5px;
+.result-container.show { display: block; }
+
+.result-group {
+    margin-bottom: 16px;
 }
 
-.url-box{
-    display:flex;
-    gap:8px;
+.result-group:last-child { margin-bottom: 0; }
+
+.result-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
 }
 
-.url{
-    flex:1;
-    min-width:0;
-    background:#111;
-    border:1px solid #292929;
-    border-radius:9px;
-    padding:11px;
-    color:#ddd;
-    font-family:monospace;
-    font-size:11px;
+.script-id-val {
+    font-family: 'Fira Code', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary);
 }
 
-.copy-btn{
-    border:1px solid #383838;
-    background:#181818;
-    color:white;
-    border-radius:9px;
-    padding:0 15px;
-    font-weight:800;
-    cursor:pointer;
+.input-copy-group {
+    display: flex;
+    gap: 8px;
 }
 
-.status{
-    margin-top:12px;
-    padding:10px 12px;
-    border-radius:9px;
-    background:#090909;
-    border:1px solid #242424;
-    color:#777;
-    font-size:11px;
+.result-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text-main);
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    outline: none;
 }
 
-.status.success{
-    color:#65dc83;
-    border-color:#1d4728;
+.btn-copy {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--card-border);
+    color: #fff;
+    border-radius: 10px;
+    padding: 0 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
-.status.error{
-    color:#ff6b6b;
-    border-color:#5c2020;
+.btn-copy:hover {
+    background: var(--primary);
+    color: #000;
 }
 
-.footer{
-    text-align:center;
-    color:#444;
-    font-size:10px;
-    padding:30px 0 20px;
+footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 12px;
+    border-top: 1px solid var(--card-border);
 }
 
-@media(max-width:650px){
-    .navbar{padding:0 5%}
-    .hero{padding-top:50px}
-    .url-box{flex-direction:column}
-    .copy-btn{padding:12px}
-    .logo{font-size:6px}
-    .hub{font-size:22px}
+@media(max-width: 640px) {
+    .navbar { padding: 0 5%; }
+    .card { padding: 18px; }
+    .input-copy-group { flex-direction: column; }
+    .btn-copy { padding: 10px; }
 }
 </style>
 </head>
@@ -328,399 +376,217 @@ body{
 
 <nav class="navbar">
     <a href="/" class="brand">
+        <div class="brand-icon">
+            <!-- เปลี่ยน URL รูปภาพโลโก้ของคุณตรงนี้ -->
+            <img src="/logo.png" alt="Lurvox Logo">
+        </div>
         LURVOX<span>PROJECT</span>
     </a>
-
-    <div class="nav-status">
-        <div class="dot"></div>
-        ONLINE
+    <div class="status-badge">
+        <div class="dot"></div> ONLINE
     </div>
 </nav>
 
-<section class="hero">
+<main class="main-container">
 
-<pre class="logo"> ██▓     █    ██  ██▀███   ██▒   █▓ ▒█████  ▒██   ██▒
-▓██▒     ██  ▓██▒▓██ ▒ ██▒▓██░   █▒▒██▒  ██▒▒▒ █ █ ▒░
-▒██░    ▓██  ▒██░▓██ ░▄█ ▒ ▓██  █▒░▒██░  ██▒░░  █   ░
-▒██░    ▓▓█  ░██░▒██▀▀█▄    ▒██ █░░▒██   ██░ ░ █ █ ▒
-░██████▒▒▒█████▓ ░██▓ ▒██▒   ▒▀█░  ░ ████▓▒░▒██▒ ▒██▒
-░ ▒░▓  ░░▒▓▒ ▒ ▒ ░ ▒▓ ░▒▓░   ░ ▐░  ░ ▒░▒░▒░ ▒▒ ░ ░▓ ░
-░ ░ ▒  ░░░▒░ ░ ░   ░▒ ░ ▒░   ░ ░░    ░ ▒ ▒░ ░░   ░▒ ░
-  ░ ░    ░░░ ░ ░   ░░   ░      ░░  ░ ░ ░ ▒   ░    ░
-    ░  ░   ░        ░           ░      ░ ░   ░    ░</pre>
+    <div class="hero">
+        <h1>Lua Obfuscator Service</h1>
+        <p>ยกระดับความปลอดภัยให้สคริปต์ของคุณด้วยระบบป้องกันและตรวจสอบ Cloudflare</p>
+    </div>
 
-<div class="hub">SERVICE</div>
+    <div class="card">
+        <div class="upload-zone">
+            <label class="upload-label">
+                <i class="fa-solid fa-file-arrow-up" style="font-size: 18px; color: var(--primary);"></i>
+                <span>อัปโหลดไฟล์ Script (.txt, .lua)</span>
+                <input type="file" id="fileInput" accept=".txt,.lua" onchange="loadScriptFile(event)">
+            </label>
+        </div>
 
-<div class="hero-text">
-Lurvox Script Obfuscation Service
-</div>
+        <textarea
+            id="scriptInput"
+            class="editor"
+            spellcheck="false"
+            placeholder="-- วางสคริปต์ Lua ของคุณที่นี่..."
+        ></textarea>
 
-</section>
+        <div class="editor-footer">
+            <span id="counter">0 ตัวอักษร</span>
+            <button class="btn-clear" onclick="clearScript()"><i class="fa-solid fa-trash"></i> ล้างข้อมูล</button>
+        </div>
 
-<main class="container">
+        <!-- Cloudflare Turnstile Verification -->
+        <div class="cf-turnstile-container">
+            <div class="cf-turnstile" data-sitekey="YOUR_CLOUDFLARE_SITE_KEY" data-callback="onTurnstileSuccess"></div>
+        </div>
 
-<div class="card">
+        <button id="createButton" class="btn-submit" onclick="createScript()">
+            <i class="fa-solid fa-bolt"></i> Obfuscate & Create Script
+        </button>
 
-<div class="card-title">
-สร้าง Script
-</div>
+        <div id="status" class="status-box">
+            <i class="fa-solid fa-circle-info"></i> สถานะ: พร้อมใช้งาน
+        </div>
 
-<div class="card-subtitle">
-วาง Lua Script หรืออัปโหลดไฟล์ .txt / .lua ด้านล่าง
-</div>
+        <div id="result" class="result-container">
+            <div class="result-group">
+                <div class="result-label">SCRIPT ID</div>
+                <div id="scriptId" class="script-id-val">------</div>
+            </div>
 
-<div class="upload-box">
-<label class="upload-label">
-📁 <span>อัปโหลดไฟล์ Script (.txt, .lua)</span>
-<input type="file" id="fileInput" accept=".txt,.lua" onchange="loadScriptFile(event)">
-</label>
-</div>
+            <div class="result-group">
+                <div class="result-label">RAW URL</div>
+                <div class="input-copy-group">
+                    <input id="scriptUrl" class="result-input" readonly>
+                    <button class="btn-copy" onclick="copyText('scriptUrl', 'คัดลอก Raw URL เรียบร้อย')">คัดลอก</button>
+                </div>
+            </div>
 
-<textarea
-id="scriptInput"
-class="editor"
-spellcheck="false"
-placeholder="-- Lurvox Service
-
-print('Hello Lurvox')"
-></textarea>
-
-<div class="controls">
-
-<div class="counter" id="counter">
-0 characters
-</div>
-
-<button class="clear-btn" onclick="clearScript()">
-ล้าง
-</button>
-
-</div>
-
-<button
-id="createButton"
-class="create-btn"
-onclick="createScript()"
->
-⚡ Obfuscate & Create Script
-</button>
-
-<div id="status" class="status">
-สถานะ: พร้อมใช้งาน
-</div>
-
-<div id="result" class="result">
-
-<div class="result-label">
-SCRIPT ID
-</div>
-
-<div id="scriptId" class="script-id">
-------
-</div>
-
-<div class="result-label">
-RAW URL
-</div>
-
-<div class="url-box">
-<input id="scriptUrl" class="url" readonly>
-<button
-class="copy-btn"
-onclick="copyText('scriptUrl','คัดลอก Raw URL แล้ว')"
->
-คัดลอก
-</button>
-</div>
-
-<div class="result-label">
-LOADSTRING
-</div>
-
-<div class="url-box">
-<input id="loadstringUrl" class="url" readonly>
-<button
-class="copy-btn"
-onclick="copyText('loadstringUrl','คัดลอก Loadstring แล้ว')"
->
-คัดลอก
-</button>
-</div>
-
-</div>
-
-</div>
+            <div class="result-group">
+                <div class="result-label">LOADSTRING</div>
+                <div class="input-copy-group">
+                    <input id="loadstringUrl" class="result-input" readonly>
+                    <button class="btn-copy" onclick="copyText('loadstringUrl', 'คัดลอก Loadstring เรียบร้อย')">คัดลอก</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </main>
 
-<footer class="footer">
-Lurvox • Script Management System
+<footer>
+    © 2026 LURVOX • Script Management System
 </footer>
 
 <script>
-
 const API_URL = "/api/obfuscate";
+let cfToken = "";
 
-const scriptInput =
-    document.getElementById("scriptInput");
+const scriptInput = document.getElementById("scriptInput");
+const counter = document.getElementById("counter");
+const createButton = document.getElementById("createButton");
+const statusBox = document.getElementById("status");
+const resultBox = document.getElementById("result");
+const scriptId = document.getElementById("scriptId");
+const scriptUrl = document.getElementById("scriptUrl");
+const loadstringUrl = document.getElementById("loadstringUrl");
 
-const counter =
-    document.getElementById("counter");
-
-const createButton =
-    document.getElementById("createButton");
-
-const statusBox =
-    document.getElementById("status");
-
-const resultBox =
-    document.getElementById("result");
-
-const scriptId =
-    document.getElementById("scriptId");
-
-const scriptUrl =
-    document.getElementById("scriptUrl");
-
-const loadstringUrl =
-    document.getElementById("loadstringUrl");
-
-
-scriptInput.addEventListener(
-    "input",
-    updateCounter
-);
-
+scriptInput.addEventListener("input", updateCounter);
 
 function updateCounter() {
-    const length = scriptInput.value.length;
-
-    counter.textContent =
-        length.toLocaleString() + " characters";
+    counter.textContent = scriptInput.value.length.toLocaleString() + " ตัวอักษร";
 }
 
+function onTurnstileSuccess(token) {
+    cfToken = token;
+}
 
 function loadScriptFile(event) {
     const file = event.target.files[0];
-
     if (!file) return;
 
     const reader = new FileReader();
-
     reader.onload = function(e) {
         scriptInput.value = e.target.result;
-
         updateCounter();
-
-        setStatus(
-            "สถานะ: โหลดไฟล์ " +
-            file.name +
-            " สำเร็จ",
-            "success"
-        );
+        setStatus("โหลดไฟล์ " + file.name + " สำเร็จ", "success");
     };
-
     reader.onerror = function() {
-        setStatus(
-            "สถานะ: อ่านไฟล์ไม่สำเร็จ",
-            "error"
-        );
+        setStatus("อ่านไฟล์ไม่สำเร็จ", "error");
     };
-
     reader.readAsText(file);
-
     event.target.value = "";
 }
 
-
 function clearScript() {
     scriptInput.value = "";
-
     updateCounter();
-
     resultBox.classList.remove("show");
-
-    setStatus(
-        "สถานะ: พร้อมใช้งาน"
-    );
+    setStatus("พร้อมใช้งาน");
 }
-
 
 function setStatus(message, type = "") {
-    statusBox.textContent = message;
-
-    statusBox.className = "status";
-
-    if (type) {
-        statusBox.classList.add(type);
-    }
+    statusBox.className = "status-box " + type;
+    const icon = type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-xmark" : "fa-circle-info";
+    statusBox.innerHTML = `<i class="fa-solid ${icon}"></i> สถานะ: ${message}`;
 }
 
-
 async function createScript() {
-
-    const source =
-        scriptInput.value.trim();
+    const source = scriptInput.value.trim();
 
     if (!source) {
-        setStatus(
-            "สถานะ: กรุณาใส่ Lua Script ก่อน",
-            "error"
-        );
-
+        setStatus("กรุณาใส่ Lua Script ก่อน", "error");
         scriptInput.focus();
-
         return;
     }
 
     createButton.disabled = true;
-
-    createButton.textContent =
-        "⏳ กำลัง Obfuscate...";
-
+    createButton.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลัง Obfuscate...`;
     resultBox.classList.remove("show");
-
-    setStatus(
-        "สถานะ: กำลังประมวลผล Script..."
-    );
+    setStatus("กำลังประมวลผล Script...");
 
     try {
-
-        const response =
-            await fetch(
-                API_URL,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        source: source,
-
-                        settings: {
-                            encryptStrings: true,
-                            proxifyLocals: true,
-                            proxifyFunctions: true,
-                            antiTamper: true,
-                            controlFlowFlattening: true,
-                            isLuauRuntime: true,
-                            loaderVMDepth: 3
-                        }
-
-                    })
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                source: source,
+                cfToken: cfToken,
+                settings: {
+                    encryptStrings: true,
+                    proxifyLocals: true,
+                    proxifyFunctions: true,
+                    antiTamper: true,
+                    controlFlowFlattening: true,
+                    isLuauRuntime: true,
+                    loaderVMDepth: 0
                 }
-            );
+            })
+        });
 
-
-        const text =
-            await response.text();
-
+        const text = await response.text();
         let data;
 
         try {
             data = JSON.parse(text);
         } catch {
-            throw new Error(
-                text ||
-                "Invalid API response"
-            );
+            throw new Error(text || "Invalid API response");
         }
 
-
-        if (!response.ok) {
-            throw new Error(
-                data.message ||
-                "Request failed"
-            );
+        if (!response.ok || data.status !== "success") {
+            throw new Error(data.message || "Obfuscation failed");
         }
 
-
-        if (data.status !== "success") {
-            throw new Error(
-                data.message ||
-                "Obfuscation failed"
-            );
-        }
-
-
-        scriptId.textContent =
-            data.id || "Unknown";
-
-        scriptUrl.value =
-            data.rawUrl || "";
-
-        loadstringUrl.value =
-            data.loadstring || "";
-
+        scriptId.textContent = data.id || "Unknown";
+        scriptUrl.value = data.rawUrl || "";
+        loadstringUrl.value = data.loadstring || "";
 
         resultBox.classList.add("show");
-
-
-        setStatus(
-            "สถานะ: ✅ สร้าง Script สำเร็จ",
-            "success"
-        );
+        setStatus("สร้าง Script สำเร็จ!", "success");
 
     } catch (error) {
-
         console.error(error);
-
-        setStatus(
-            "สถานะ: ❌ " + error.message,
-            "error"
-        );
-
+        setStatus(error.message, "error");
     } finally {
-
         createButton.disabled = false;
-
-        createButton.textContent =
-            "⚡ Obfuscate & Create Script";
-
+        createButton.innerHTML = `<i class="fa-solid fa-bolt"></i> Obfuscate & Create Script`;
     }
 }
 
-
-async function copyText(
-    elementId,
-    successMessage
-) {
-
-    const input =
-        document.getElementById(elementId);
-
-    const value =
-        input.value;
-
-    if (!value) return;
+async function copyText(elementId, successMessage) {
+    const input = document.getElementById(elementId);
+    if (!input.value) return;
 
     try {
-
-        await navigator.clipboard.writeText(
-            value
-        );
-
+        await navigator.clipboard.writeText(input.value);
     } catch {
-
         input.select();
-
         document.execCommand("copy");
-
     }
-
-    setStatus(
-        "สถานะ: ✅ " + successMessage,
-        "success"
-    );
+    setStatus(successMessage, "success");
 }
 
-
 updateCounter();
-
 </script>
 
 </body>
