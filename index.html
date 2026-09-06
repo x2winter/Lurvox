@@ -1,682 +1,294 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#030712">
 
-<title>LURVOX • Security Service</title>
-
-<!-- Font & Icons -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<title>Loadstring</title>
 
 <style>
-:root {
-    --primary: #00f0ff;
-    --primary-glow: rgba(0, 240, 255, 0.4);
-    --secondary: #a855f7;
-    --bg: #030712;
-    --card-bg: rgba(15, 23, 42, 0.75);
-    --card-border: rgba(255, 255, 255, 0.1);
-    --input-bg: rgba(2, 6, 23, 0.85);
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --success: #10b981;
-    --error: #ef4444;
-}
-
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-::-webkit-scrollbar-track {
-    background: var(--bg);
-}
-::-webkit-scrollbar-thumb {
-    background: #1e293b;
-    border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: var(--primary);
-}
-
 body {
     min-height: 100vh;
-    background-color: var(--bg);
-    background-image: 
-        radial-gradient(at 10% 10%, rgba(0, 240, 255, 0.15) 0px, transparent 40%),
-        radial-gradient(at 90% 90%, rgba(168, 85, 247, 0.15) 0px, transparent 40%),
-        radial-gradient(at 50% 50%, rgba(15, 23, 42, 0.5) 0px, transparent 100%);
-    background-attachment: fixed;
-    color: var(--text-main);
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    display: flex;
-    flex-direction: column;
-}
+    background: #191b30;
+    color: white;
+    font-family: Arial, sans-serif;
 
-.navbar {
-    height: 75px;
     display: flex;
+    justify-content: center;
     align-items: center;
-    justify-content: space-between;
-    padding: 0 8%;
-    background: rgba(3, 7, 18, 0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--card-border);
-    position: sticky;
-    top: 0;
-    z-index: 100;
 }
 
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    text-decoration: none;
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: 2px;
-    color: var(--text-main);
-    transition: transform 0.2s ease;
+/* UI เล็กลง */
+.container {
+    width: 82%;
+    max-width: 350px;
 }
 
-.brand:hover {
-    transform: translateY(-1px);
-}
+/* ================= BRAND ================= */
 
-.brand-icon {
-    width: 42px;
-    height: 42px;
+.brand-header {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    border-radius: 50%;
-    background: #000;
-    border: 1.5px solid var(--primary);
-    box-shadow: 0 0 15px var(--primary-glow);
+    gap: 8px;
+    margin-bottom: 12px;
 }
 
-.brand-icon img {
-    width: 100%;
-    height: 100%;
+.brand-logo {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
     object-fit: cover;
 }
 
-.brand span { 
-    color: var(--primary); 
-    text-shadow: 0 0 10px var(--primary-glow);
-}
-
-.status-badge {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 16px;
-    background: rgba(16, 185, 129, 0.08);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--success);
-    letter-spacing: 1px;
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
-}
-
-.dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--success);
-    box-shadow: 0 0 10px var(--success);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(0.95); opacity: 0.8; }
-    50% { transform: scale(1.2); opacity: 1; }
-    100% { transform: scale(0.95); opacity: 0.8; }
-}
-
-.main-container {
-    flex: 1;
-    width: 90%;
-    max-width: 950px;
-    margin: 40px auto;
-}
-
-.hero {
-    text-align: center;
-    margin-bottom: 35px;
-}
-
-.ascii-banner {
-    font-family: 'Fira Code', monospace;
-    font-size: clamp(8px, 1.3vw, 13px);
-    line-height: 1.15;
-    white-space: pre;
-    color: var(--primary);
-    text-shadow: 0 0 20px var(--primary-glow), 0 0 40px rgba(0, 240, 255, 0.2);
-    display: inline-block;
-    margin-bottom: 20px;
-    user-select: none;
-    transition: all 0.3s ease;
-}
-
-.hero h1 {
-    font-size: clamp(28px, 4vw, 42px);
-    font-weight: 800;
-    background: linear-gradient(135deg, #ffffff 20%, var(--primary) 70%, var(--secondary) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 12px;
-    letter-spacing: -0.5px;
-}
-
-.hero p {
-    color: var(--text-muted);
-    font-size: 15px;
-    font-weight: 500;
-}
-
-.card {
-    background: var(--card-bg);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--card-border);
-    border-radius: 24px;
-    padding: 32px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    transition: border-color 0.3s ease;
-}
-
-.card:hover {
-    border-color: rgba(255, 255, 255, 0.18);
-}
-
-.upload-zone {
-    border: 2px dashed rgba(255, 255, 255, 0.15);
-    border-radius: 16px;
-    padding: 18px;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.015);
-    cursor: pointer;
-    transition: all 0.25s ease;
-    margin-bottom: 18px;
-}
-
-.upload-zone:hover {
-    border-color: var(--primary);
-    background: rgba(0, 240, 255, 0.04);
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
-}
-
-.upload-label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    color: var(--text-muted);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.upload-label i {
-    font-size: 20px;
-    color: var(--primary);
-    transition: transform 0.2s ease;
-}
-
-.upload-zone:hover .upload-label i {
-    transform: translateY(-2px);
-}
-
-.upload-label input { display: none; }
-
-.editor {
-    width: 100%;
-    min-height: 290px;
-    background: var(--input-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 16px;
-    padding: 20px;
-    color: #38bdf8;
-    font-family: 'Fira Code', monospace;
-    font-size: 13.5px;
-    line-height: 1.6;
-    outline: none;
-    resize: vertical;
-    transition: all 0.25s ease;
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
-}
-
-.editor:focus {
-    border-color: var(--primary);
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.5), 0 0 20px var(--primary-glow);
-}
-
-.editor-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 12px;
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 500;
-}
-
-.btn-clear {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.btn-clear:hover { 
-    color: var(--error); 
-    transform: scale(1.02);
-}
-
-.btn-submit {
-    width: 100%;
-    margin-top: 20px;
-    padding: 18px;
-    border: none;
-    border-radius: 16px;
-    background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
-    color: #030712;
+.brand-text {
     font-size: 16px;
     font-weight: 800;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    box-shadow: 0 4px 20px rgba(0, 240, 255, 0.25);
-}
-
-.btn-submit:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px var(--primary-glow);
-    filter: brightness(1.1);
-}
-
-.btn-submit:active:not(:disabled) {
-    transform: translateY(-1px);
-}
-
-.btn-submit:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    filter: grayscale(0.5);
-}
-
-.status-box {
-    margin-top: 20px;
-    padding: 14px 18px;
-    border-radius: 12px;
-    font-size: 13.5px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--card-border);
-    color: var(--text-muted);
-    transition: all 0.3s ease;
-}
-
-.status-box.success {
-    background: rgba(16, 185, 129, 0.1);
-    border-color: rgba(16, 185, 129, 0.3);
-    color: var(--success);
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
-}
-
-.status-box.error {
-    background: rgba(239, 68, 68, 0.1);
-    border-color: rgba(239, 68, 68, 0.3);
-    color: var(--error);
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.1);
-}
-
-.result-container {
-    display: none;
-    margin-top: 24px;
-    padding: 24px;
-    background: var(--input-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 18px;
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
-    animation: fadeIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.result-container.show { display: block; }
-
-.result-group {
-    margin-bottom: 18px;
-}
-
-.result-group:last-child { margin-bottom: 0; }
-
-.result-label {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-muted);
     letter-spacing: 1.5px;
-    margin-bottom: 8px;
+    color: #ffffff;
 }
 
-.script-id-val {
-    font-family: 'Fira Code', monospace;
-    font-size: clamp(16px, 4vw, 22px);
-    font-weight: 700;
-    color: var(--primary);
-    text-shadow: 0 0 10px var(--primary-glow);
-    word-break: break-all;
-    overflow-wrap: break-word;
-    white-space: normal;
-}
+/* ================= TITLE ================= */
 
-.input-copy-group {
+.title {
     display: flex;
-    gap: 10px;
+    justify-content: center;
+    align-items: center;
+
+    gap: 6px;
+    margin-bottom: 14px;
 }
 
-.result-input {
-    flex: 1;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--card-border);
-    border-radius: 12px;
-    padding: 12px 16px;
-    color: var(--text-main);
-    font-family: 'Fira Code', monospace;
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.2s ease;
+.title .icon {
+    font-size: 19px;
 }
 
-.result-input:focus {
-    border-color: var(--primary);
-}
-
-.btn-copy {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--card-border);
-    color: #fff;
-    border-radius: 12px;
-    padding: 0 20px;
+.title h1 {
+    font-size: 21px;
     font-weight: 700;
-    font-size: 13px;
+}
+
+/* ================= CODE ================= */
+
+.code-box {
+    position: relative;
+
+    width: 100%;
+    height: 100px;
+
+    background: #0d101f;
+
+    border: 1px solid #22263c;
+    border-radius: 13px;
+
+    padding: 17px 13px;
+
+    overflow: hidden;
+}
+
+.code-scroll {
+    width: 100%;
+    height: 100%;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    scrollbar-width: none;
+}
+
+.code-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+pre {
+    width: max-content;
+
+    white-space: pre;
+
+    font-family:
+        Consolas,
+        Monaco,
+        monospace;
+
+    font-size: 11px;
+    line-height: 1.75;
+
+    color: #d7d9e3;
+}
+
+/* ================= COLORS ================= */
+
+.variable {
+    color: #d7d9e3;
+}
+
+.function {
+    color: #55a5dc;
+}
+
+.string {
+    color: #c99a86;
+}
+
+.comment {
+    color: #70a85b;
+}
+
+/* ================= COPY ================= */
+
+.copy-btn {
+    position: absolute;
+
+    top: 7px;
+    right: 7px;
+
+    padding: 6px 10px;
+
+    border: none;
+    border-radius: 9px;
+
+    background: #282d52;
+    color: #eee;
+
+    font-size: 11px;
+
     cursor: pointer;
-    transition: all 0.25s ease;
+
+    z-index: 10;
 }
 
-.btn-copy:hover {
-    background: var(--primary);
-    color: #030712;
-    box-shadow: 0 0 15px var(--primary-glow);
+.copy-btn:active {
+    transform: scale(.95);
 }
 
-footer {
+/* ================= INFO ================= */
+
+.info {
     text-align: center;
-    padding: 24px;
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 500;
-    border-top: 1px solid var(--card-border);
-    background: rgba(3, 7, 18, 0.6);
+
+    margin-top: 11px;
+
+    color: #dedee5;
+
+    font-size: 11px;
+    line-height: 1.5;
 }
 
-@media(max-width: 640px) {
-    .navbar { padding: 0 5%; }
-    .card { padding: 20px; }
-    .input-copy-group { flex-direction: column; }
-    .btn-copy { padding: 12px; }
-    .ascii-banner { font-size: 6.5px; }
+.info-url {
+    color: #dedee5;
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:600px) {
+
+    .container {
+        width: 80%;
+        max-width: 340px;
+    }
+
+    .brand-logo {
+        width: 20px;
+        height: 20px;
+    }
+
+    .brand-text {
+        font-size: 15px;
+    }
+
+    .title h1 {
+        font-size: 20px;
+    }
+
+    .title .icon {
+        font-size: 18px;
+    }
+
+    .code-box {
+        height: 98px;
+    }
+
+    pre {
+        font-size: 11px;
+    }
+
+    .info {
+        font-size: 11px;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<nav class="navbar">
-    <a href="/" class="brand">
-        <div class="brand-icon">
-            <img src="https://i.postimg.cc/jqP0GjCB/lurvox-logo.png" alt="Lurvox Logo">
-        </div>
-        LURVOX<span>PROJECT</span>
-    </a>
-    <div class="status-badge">
-        <div class="dot"></div> ONLINE
-    </div>
-</nav>
+<div class="container">
 
-<main class="main-container">
-
-    <div class="hero">
-        <pre class="ascii-banner">
-██▓     █    ██  ██▀███   ██▒   █▓ ▒█████  ▒██   ██▒   
-▓██▒     ██  ▓██▒▓██ ▒ ██▒▓██░   █▒▒██▒  ██▒▒▒ █ █ ▒░   
-▒██░    ▓██  ▒██░▓██ ░▄█ ▒ ▓██  █▒░▒██░  ██▒░░  █   ░   
-▒██░    ▓▓█  ░██░▒██▀▀█▄    ▒██ █░░▒██   ██░ ░ █ █ ▒    
-░██████▒▒▒█████▓ ░██▓ ▒██▒   ▒▀█░  ░ ████▓▒░▒██▒ ▒██▒   
-░ ▒░▓  ░░▒▓▒ ▒ ▒ ░ ▒▓ ░▒▓░   ░ ▐░  ░ ▒░▒░▒░ ▒▒ ░ ░▓ ░   
-░ ░ ▒  ░░░▒░ ░ ░   ░▒ ░ ▒░   ░ ░░    ░ ▒ ▒░ ░░   ░▒ ░   
-  ░ ░    ░░░ ░ ░   ░░   ░      ░░  ░ ░ ░ ▒   ░    ░     
-    ░  ░   ░        ░           ░      ░ ░   ░    ░     
-                               ░                        </pre>
-        <h1>Lua Obfuscator Service</h1>
-        <p>Enhance your script security with our advanced protection system</p>
+    <div class="brand-header">
+        <img src="https://i.postimg.cc/jqP0GjCB/lurvox-logo.png" alt="Lurvox Logo" class="brand-logo">
+        <span class="brand-text">LURVOX</span>
     </div>
 
-    <div class="card">
-        <div class="upload-zone">
-            <label class="upload-label">
-                <i class="fa-solid fa-file-arrow-up"></i>
-                <span>Upload Script File (.txt, .lua)</span>
-                <input type="file" id="fileInput" accept=".txt,.lua" onchange="loadScriptFile(event)">
-            </label>
-        </div>
+    <div class="title">
+        <span class="icon">📜</span>
+        <h1>Loadstring</h1>
+    </div>
 
-        <textarea
-            id="scriptInput"
-            class="editor"
-            spellcheck="false"
-            placeholder="-- Paste your Lua script here..."
-        ></textarea>
+    <div class="code-box">
 
-        <div class="editor-footer">
-            <span id="counter">0 characters</span>
-            <button class="btn-clear" onclick="clearScript()"><i class="fa-solid fa-trash"></i> Clear</button>
-        </div>
-
-        <button id="createButton" class="btn-submit" onclick="createScript()">
-            <i class="fa-solid fa-bolt"></i> Obfuscate & Create Script
+        <button
+            class="copy-btn"
+            id="copyButton"
+            onclick="copyCode()">
+            Copy
         </button>
 
-        <div id="status" class="status-box">
-            <i class="fa-solid fa-circle-info"></i> Status: Ready
+        <div class="code-scroll">
+            <pre id="code"></pre>
         </div>
 
-        <div id="result" class="result-container">
-            <div class="result-group">
-                <div class="result-label">SCRIPT ID</div>
-                <div id="scriptId" class="script-id-val">------</div>
-            </div>
-
-            <div class="result-group">
-                <div class="result-label">RAW URL</div>
-                <div class="input-copy-group">
-                    <input id="scriptUrl" class="result-input" readonly>
-                    <button class="btn-copy" onclick="copyText('scriptUrl', 'Raw URL copied successfully!')">Copy</button>
-                </div>
-            </div>
-
-            <div class="result-group">
-                <div class="result-label">LOADSTRING</div>
-                <div class="input-copy-group">
-                    <input id="loadstringUrl" class="result-input" readonly>
-                    <button class="btn-copy" onclick="copyText('loadstringUrl', 'Loadstring copied successfully!')">Copy</button>
-                </div>
-            </div>
-        </div>
     </div>
 
-</main>
+    <div class="info">
+        This code is protected by lurvox •<br>
+        <span class="info-url">https://lurvox-security.vercel.app</span>
+    </div>
 
-<footer>
-    © 2026 LURVOX • Script Management System
-</footer>
+</div>
 
 <script>
-const API_URL = "/api/obfuscate";
 
-const scriptInput = document.getElementById("scriptInput");
-const counter = document.getElementById("counter");
-const createButton = document.getElementById("createButton");
-const statusBox = document.getElementById("status");
-const resultBox = document.getElementById("result");
-const scriptId = document.getElementById("scriptId");
-const scriptUrl = document.getElementById("scriptUrl");
-const loadstringUrl = document.getElementById("loadstringUrl");
+const currentUrl = window.location.href;
 
-scriptInput.addEventListener("input", updateCounter);
+const codeHTML =
+`<span class="variable">script_key</span> = <span class="string">"KEY"</span>;
+<span class="function">loadstring</span>(game:<span class="function">HttpGet</span>(<span class="string">"${currentUrl}"</span>))()`;
 
-function updateCounter() {
-    counter.textContent = scriptInput.value.length.toLocaleString() + " characters";
+document.getElementById("code").innerHTML = codeHTML;
+
+function copyCode() {
+
+    const text =
+`-- // Lurvox_Security_Service";
+loadstring(game:HttpGet("${currentUrl}"))()`;
+
+    navigator.clipboard.writeText(text);
+
+    const button =
+        document.getElementById("copyButton");
+
+    button.innerText = "Copied!";
+
+    setTimeout(() => {
+        button.innerText = "Copy";
+    }, 1200);
 }
 
-function loadScriptFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        scriptInput.value = e.target.result;
-        updateCounter();
-        setStatus("Loaded file: " + file.name, "success");
-    };
-    reader.onerror = function() {
-        setStatus("Failed to read file", "error");
-    };
-    reader.readAsText(file);
-    event.target.value = "";
-}
-
-function clearScript() {
-    scriptInput.value = "";
-    updateCounter();
-    resultBox.classList.remove("show");
-    setStatus("Ready");
-}
-
-function setStatus(message, type = "") {
-    statusBox.className = "status-box " + type;
-    const icon = type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-xmark" : "fa-circle-info";
-    statusBox.innerHTML = `<i class="fa-solid ${icon}"></i> Status: ${message}`;
-}
-
-async function createScript() {
-    const source = scriptInput.value.trim();
-
-    if (!source) {
-        setStatus("Please enter Lua script first", "error");
-        scriptInput.focus();
-        return;
-    }
-
-    createButton.disabled = true;
-    createButton.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing Obfuscation...`;
-    resultBox.classList.remove("show");
-    setStatus("Processing Script...");
-
-    try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                source: source,
-                settings: {
-                    encryptStrings: true,
-                    proxifyLocals: true,
-                    proxifyFunctions: true,
-                    antiTamper: true,
-                    controlFlowFlattening: true,
-                    isLuauRuntime: true,
-                    loaderVMDepth: 0
-                }
-            })
-        });
-
-        const text = await response.text();
-        let data;
-
-        try {
-            data = JSON.parse(text);
-        } catch {
-            throw new Error(text || "Invalid API response");
-        }
-
-        if (!response.ok || data.status !== "success") {
-            throw new Error(data.message || "Obfuscation failed");
-        }
-
-        scriptId.textContent = data.id || "Unknown";
-        scriptUrl.value = data.rawUrl || "";
-        loadstringUrl.value = data.loadstring || "";
-
-        resultBox.classList.add("show");
-        setStatus("Script Created Successfully!", "success");
-
-    } catch (error) {
-        console.error(error);
-        setStatus(error.message, "error");
-    } finally {
-        createButton.disabled = false;
-        createButton.innerHTML = `<i class="fa-solid fa-bolt"></i> Obfuscate & Create Script`;
-    }
-}
-
-async function copyText(elementId, successMessage) {
-    const input = document.getElementById(elementId);
-    if (!input.value) return;
-
-    try {
-        await navigator.clipboard.writeText(input.value);
-    } catch {
-        input.select();
-        document.execCommand("copy");
-    }
-    setStatus(successMessage, "success");
-}
-
-updateCounter();
 </script>
 
 </body>
