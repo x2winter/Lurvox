@@ -81,11 +81,8 @@ body {
 .brand {
     display: flex;
     align-items: center;
+    gap: 10px;
     text-decoration: none;
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: 2px;
-    color: var(--text-main);
     transition: transform 0.2s ease;
 }
 
@@ -93,9 +90,18 @@ body {
     transform: translateY(-1px);
 }
 
-.brand span { 
-    color: var(--primary); 
-    text-shadow: 0 0 10px var(--primary-glow);
+.brand-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.brand-text {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #ffffff;
 }
 
 .status-badge {
@@ -435,6 +441,8 @@ footer {
 
 @media(max-width: 640px) {
     .navbar { padding: 0 5%; }
+    .brand-logo { width: 24px; height: 24px; }
+    .brand-text { font-size: 18px; }
     .card { padding: 20px; }
     .input-copy-group { flex-direction: column; }
     .btn-copy { padding: 12px; }
@@ -447,7 +455,8 @@ footer {
 
 <nav class="navbar">
     <a href="/" class="brand">
-        LURVOX<span>PROJECT</span>
+        <img src="https://i.postimg.cc/jqP0GjCB/lurvox-logo.png" alt="Lurvox Logo" class="brand-logo">
+        <span class="brand-text">LURVOX</span>
     </a>
     <div class="status-badge">
         <div class="dot"></div> ONLINE
@@ -658,4 +667,3 @@ updateCounter();
 
 </body>
 </html>
-
