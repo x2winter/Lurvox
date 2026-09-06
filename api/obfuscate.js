@@ -145,14 +145,16 @@ export default async function handler(req, res) {
   }
 
   // ==========================================
-  // GET: ดึงเฉพาะ Obfuscated Code (ปิดช่องโหว่ source=true)
+  // GET: ดึงเฉพาะ Obfuscated Code ผ่าน /loader/script/:id
   // ==========================================
   if (req.method === 'GET') {
     try {
+      // ดึง ID จาก Parameter ที่ Vercel Rewrite ส่งมา (id, scriptId หรือ path param)
       const id = req.query.id || req.query.scriptId;
 
       if (!id) {
-        return res.status(400).send("warn('Missing Project ID')");
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        return res.status(400).send("warn('Missing Script ID')");
       }
 
       const safeId = encodeURIComponent(id);
