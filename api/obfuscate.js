@@ -17,9 +17,9 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
-
+ 
   const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return res.status(500).json({
@@ -234,7 +234,7 @@ pre{
 
 <div class="container">
   <div class="title">
-    <span class="icon">📜</span>
+    <span class="icon">ðŸ“œ</span>
     <h1>Loadstring</h1>
   </div>
 
@@ -249,7 +249,7 @@ pre{
   </div>
 
   <div class="info">
-    This code is protected by lurvox •<br>
+    This code is protected by lurvox â€¢<br>
     https://lurvox-security.com
   </div>
 </div>
@@ -258,7 +258,7 @@ pre{
 const currentUrl = window.location.href;
 
 document.getElementById("code").innerHTML =
-\`<span class="variable">script_key</span> = <span class="string">"KEY"</span>;
+\`<span class="variable">-- Lurvox Service</span> = <span class="string">"KEY"</span>;
 <span class="function">loadstring</span>(game:<span class="function">HttpGet</span>(<span class="string">"\${currentUrl}"</span>))()\`;
 
 function copyCode() {
@@ -340,4 +340,4 @@ loadstring(game:HttpGet("\${currentUrl}"))()\`;
   return res.status(405).json({
     message: 'Method Not Allowed'
   });
-  }
+}
