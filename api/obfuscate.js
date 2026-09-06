@@ -350,7 +350,7 @@ pre {
 const currentUrl = window.location.href;
 
 const codeHTML =
-\`<span class="variable">-- //</span> = <span class="string">"Lurvox_Security_Service"</span>;
+\`<span class="variable">-- // Lurvox_Security_Service</span><span class="string"></span>;
 <span class="function">loadstring</span>(game:<span class="function">HttpGet</span>(<span class="string">"\${currentUrl}"</span>))()\`;
 
 document.getElementById("code").innerHTML = codeHTML;
