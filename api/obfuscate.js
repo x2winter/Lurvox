@@ -1,4 +1,4 @@
-function generateRandomID(length = 12) {
+function generateRandomID(length = 32) {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = '';
 
@@ -35,6 +35,9 @@ export default async function handler(req, res) {
     Authorization: `Bearer ${SUPABASE_KEY}`
   };
 
+  // ==========================================
+  // POST: รับ Source Code -> Obfuscate -> เซฟลง Supabase
+  // ==========================================
   if (req.method === 'POST') {
     try {
       const { source, settings } = req.body || {};
@@ -46,6 +49,7 @@ export default async function handler(req, res) {
         });
       }
 
+      // ส่ง Source Code ต้นฉบับไป Obfuscate
       const obfResponse = await fetch(
         'https://goofyscator.lua.cz/obfuscate',
         {
@@ -62,46 +66,32 @@ export default async function handler(req, res) {
               antiTamper: true,
               controlFlowFlattening: true,
               isLuauRuntime: true,
-              loaderVMDepth: 3
+              loaderVMDepth: 0
             }
           })
         }
       );
 
       const obfText = await obfResponse.text();
-
       let obfData;
 
       try {
         obfData = JSON.parse(obfText);
       } catch {
-        throw new Error(
-          `Obfuscator returned invalid response: ${obfText.substring(0, 300)}`
-        );
+        throw new Error(`Obfuscator returned invalid response: ${obfText.substring(0, 300)}`);
       }
 
-      if (!obfResponse.ok) {
-        throw new Error(
-          obfData.message ||
-          obfData.error ||
-          'Obfuscator request failed'
-        );
-      }
-
-      if (obfData.status !== 'success' || !obfData.result) {
-        throw new Error(
-          obfData.message ||
-          obfData.error ||
-          'Obfuscation failed'
-        );
+      if (!obfResponse.ok || obfData.status !== 'success' || !obfData.result) {
+        throw new Error(obfData.message || obfData.error || 'Obfuscation failed');
       }
 
       let id;
       let saved = false;
       let lastError = '';
 
+      // สุ่ม ID ความยาว 32 ตัวอักษร
       for (let attempt = 0; attempt < 5; attempt++) {
-        id = generateRandomID(12);
+        id = generateRandomID(32);
 
         const dbResponse = await fetch(
           `${SUPABASE_URL}/rest/v1/${TABLE_NAME}`,
@@ -114,7 +104,7 @@ export default async function handler(req, res) {
             body: JSON.stringify({
               id,
               code: obfData.result,
-              source,
+              source, // เก็บต้นฉบับไว้ใน Database เท่านั้น
               created_at: Date.now()
             })
           }
@@ -128,28 +118,15 @@ export default async function handler(req, res) {
         }
 
         lastError = `HTTP ${dbResponse.status}: ${responseText}`;
-
-        console.error(
-          'SUPABASE SAVE ERROR:',
-          lastError
-        );
       }
 
       if (!saved) {
-        throw new Error(
-          `Failed to save to Supabase: ${lastError}`
-        );
+        throw new Error(`Failed to save to Supabase: ${lastError}`);
       }
 
-      const baseUrl =
-        process.env.API_BASE_URL ||
-        `https://${req.headers.host}`;
-
-      const rawUrl =
-        `${baseUrl}/api/obfuscate?id=${encodeURIComponent(id)}`;
-
-      const loadstring =
-        `loadstring(game:HttpGet("${rawUrl}"))()`;
+      const baseUrl = `https://${req.headers.host}`;
+      const rawUrl = `${baseUrl}/loader/script/${id}`;
+      const loadstring = `loadstring(game:HttpGet("${rawUrl}"))()`;
 
       return res.status(200).json({
         status: 'success',
@@ -160,7 +137,6 @@ export default async function handler(req, res) {
 
     } catch (error) {
       console.error('POST API ERROR:', error);
-
       return res.status(500).json({
         status: 'error',
         message: error.message || 'Internal server error'
@@ -168,20 +144,22 @@ export default async function handler(req, res) {
     }
   }
 
+  // ==========================================
+  // GET: ดึงเฉพาะ Obfuscated Code (ปิดช่องโหว่ source=true)
+  // ==========================================
   if (req.method === 'GET') {
     try {
-      const { id, source } = req.query;
+      const id = req.query.id || req.query.scriptId;
 
       if (!id) {
-        return res.status(400).send(
-          "warn('Missing Project ID')"
-        );
+        return res.status(400).send("warn('Missing Project ID')");
       }
 
       const safeId = encodeURIComponent(id);
 
+      // ดึงเฉพาะคอลัมน์ code ออกมาจาก Database เท่านั้น
       const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?id=eq.${safeId}&select=code,source`,
+        `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?id=eq.${safeId}&select=code`,
         {
           method: 'GET',
           headers: supabaseHeaders
@@ -191,66 +169,25 @@ export default async function handler(req, res) {
       const responseText = await response.text();
 
       if (!response.ok) {
-        throw new Error(
-          `Supabase HTTP ${response.status}: ${responseText}`
-        );
+        throw new Error(`Supabase HTTP ${response.status}: ${responseText}`);
       }
 
-      let rows;
-
-      try {
-        rows = JSON.parse(responseText);
-      } catch {
-        throw new Error('Invalid response from Supabase');
-      }
-
+      let rows = JSON.parse(responseText);
       const data = rows[0];
 
-      if (!data) {
-        res.setHeader(
-          'Content-Type',
-          'text/plain; charset=utf-8'
-        );
-
-        return res.status(404).send(
-          "warn('Script not found or removed')"
-        );
+      if (!data || !data.code) {
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        return res.status(404).send("warn('Script not found or removed')");
       }
 
-      res.setHeader(
-        'Content-Type',
-        'text/plain; charset=utf-8'
-      );
-
-      if (source === 'true') {
-        if (!data.source) {
-          return res.status(404).send(
-            "warn('Source code not found')"
-          );
-        }
-
-        return res.status(200).send(data.source);
-      }
-
-      if (!data.code) {
-        return res.status(404).send(
-          "warn('Obfuscated code not found')"
-        );
-      }
-
+      // ส่งคืนเฉพาะโค้ดที่ Obfuscate แล้วเสมอ
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       return res.status(200).send(data.code);
 
     } catch (error) {
       console.error('GET API ERROR:', error);
-
-      res.setHeader(
-        'Content-Type',
-        'text/plain; charset=utf-8'
-      );
-
-      return res.status(500).send(
-        "warn('Internal server error')"
-      );
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.status(500).send("warn('Internal server error')");
     }
   }
 
