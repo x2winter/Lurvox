@@ -1,9 +1,8 @@
-content = r'''// api/obfuscate.js
-import crypto from 'crypto';
+import { randomBytes } from 'node:crypto';
 
 function generateRandomID(length = 32) {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const bytes = crypto.randomBytes(length);
+  const bytes = randomBytes(length);
   let result = '';
 
   for (let i = 0; i < length; i++) {
@@ -40,7 +39,7 @@ function xorEncrypt(text, key) {
 }
 
 function randomLuaName(prefix = 'v') {
-  return `${prefix}_${generateRandomID(10)}`;
+  return `\( {prefix}_ \){generateRandomID(10)}`;
 }
 
 function generateLuaWrapper(source) {
@@ -61,8 +60,8 @@ function generateLuaWrapper(source) {
 
   return `local ${envName} = {}
 
-local ${keyName} = "${escapeLuaString(key)}"
-local ${dataName} = "${encryptedSource}"
+local \( {keyName} = " \){escapeLuaString(key)}"
+local \( {dataName} = " \){encryptedSource}"
 
 local _char = string.char
 local _byte = string.byte
@@ -70,83 +69,89 @@ local _concat = table.concat
 local _bxor = (bit32 or bit).bxor
 
 local function ${fakeA}(value)
-    if 0 == 1 then
-        return nil
-    end
+if 0 == 1 then
+return nil
+end
 
-    return value
+return value
+
 end
 
 local function ${fakeB}(value)
-    return value
+return value
 end
 
 local function ${decryptName}(encoded, xorKey)
-    local httpService = game:GetService("HttpService")
-    local raw = httpService:Base64Decode(encoded)
-    local result = {}
+local httpService = game:GetService("HttpService")
+local raw = httpService:Base64Decode(encoded)
+local result = {}
 
-    for index = 1, #raw do
-        if 4 == 0 then
-            while true do end
-        end
-
-        local dataByte = _byte(raw, index)
-        local keyByte = _byte(xorKey, ((index - 1) % #xorKey) + 1)
-
-        result[index] = _char(_bxor(dataByte, keyByte))
+for index = 1, #raw do
+    if 4 == 0 then
+        while true do end
     end
 
-    return _concat(result)
+    local dataByte = _byte(raw, index)
+    local keyByte = _byte(xorKey, ((index - 1) % #xorKey) + 1)
+
+    result[index] = _char(_bxor(dataByte, keyByte))
+end
+
+return _concat(result)
+
 end
 
 local function ${runtimeCheck}()
-    local stringAlias = string
-    local charAlias = stringAlias.char
+local stringAlias = string
+local charAlias = stringAlias.char
 
-    if charAlias == nil then
-        return false
-    end
+if charAlias == nil then
+    return false
+end
 
-    if false then
-        while true do end
-    end
+if false then
+    while true do end
+end
 
-    return true
+return true
+
 end
 
 local function ${dynamicExecutor}(sourceCode)
-    local ${loaderName} = loadstring
+local ${loaderName} = loadstring
 
-    if type(${loaderName}) ~= "function" then
-        return nil
-    end
+if type(${loaderName}) \~= "function" then
+    return nil
+end
 
-    return ${loaderName}(sourceCode)
+return ${loaderName}(sourceCode)
+
 end
 
 if 1 == 1 then
-    local runtimeIdentifier = math.random(100000, 999999999)
+local runtimeIdentifier = math.random(100000, 999999999)
 
-    if runtimeIdentifier < 0 then
-        while true do end
-    end
+if runtimeIdentifier < 0 then
+    while true do end
+end
+
 end
 
 if ${runtimeCheck}() then
-    local ${payloadName} = ${fakeB}(${dataName})
-    local runtimeKey = ${fakeA}(${keyName})
+local ${payloadName} = \( {fakeB}( \){dataName})
+local runtimeKey = \( {fakeA}( \){keyName})
 
-    local ${sourceName} = ${decryptName}(
-        ${payloadName},
-        runtimeKey
-    )
+local ${sourceName} = ${decryptName}(
+    ${payloadName},
+    runtimeKey
+)
 
-    local executor = ${dynamicExecutor}(${sourceName})
+local executor = \( {dynamicExecutor}( \){sourceName})
 
-    if executor then
-        return executor()
-    end
+if executor then
+    return executor()
+end
+
 end
 `;
 }
@@ -252,7 +257,7 @@ export default async function handler(req, res) {
         id = generateRandomID(32);
 
         const dbResponse = await fetch(
-          `${SUPABASE_URL}/rest/v1/${TABLE_NAME}`,
+          `\( {SUPABASE_URL}/rest/v1/ \){TABLE_NAME}`,
           {
             method: 'POST',
             headers: {
@@ -276,7 +281,6 @@ export default async function handler(req, res) {
         }
 
         lastError = `HTTP ${dbResponse.status}: ${responseText}`;
-
         await delay(500 * Math.pow(2, attempt));
       }
 
@@ -287,7 +291,7 @@ export default async function handler(req, res) {
       }
 
       const baseUrl = `https://${req.headers.host}`;
-      const rawUrl = `${baseUrl}/loader/script/${id}`;
+      const rawUrl = `\( {baseUrl}/loader/script/ \){id}`;
       const loadstring = `loadstring(game:HttpGet("${rawUrl}"))()`;
 
       return res.status(200).json({
@@ -317,7 +321,6 @@ export default async function handler(req, res) {
         !/^[a-zA-Z0-9]{32}$/.test(id)
       ) {
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-
         return res.status(400).send(
           "warn('Invalid or missing Script ID')"
         );
@@ -326,7 +329,7 @@ export default async function handler(req, res) {
       const safeId = encodeURIComponent(id);
 
       const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?id=eq.${safeId}&select=code`,
+        `\( {SUPABASE_URL}/rest/v1/ \){TABLE_NAME}?id=eq.${safeId}&select=code`,
         {
           method: 'GET',
           headers: supabaseHeaders
@@ -346,7 +349,6 @@ export default async function handler(req, res) {
 
       if (!data || !data.code) {
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-
         return res.status(404).send(
           "warn('Script not found or removed')"
         );
@@ -369,7 +371,6 @@ export default async function handler(req, res) {
           'Content-Type',
           'text/plain; charset=utf-8'
         );
-
         return res.status(200).send(data.code);
       }
 
@@ -380,34 +381,132 @@ export default async function handler(req, res) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Loadstring</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;background:#191b30;color:white;font-family:Arial,sans-serif;display:flex;justify-content:center;align-items:center}
-.container{width:82%;max-width:350px}
-.title{display:flex;justify-content:center;align-items:center;gap:6px;margin-bottom:14px}
-.title .icon{font-size:19px}
-.title h1{font-size:21px;font-weight:700}
-.code-box{position:relative;width:100%;height:100px;background:#0d101f;border:1px solid #22263c;border-radius:13px;padding:17px 13px;overflow:hidden}
-.code-scroll{width:100%;height:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
-.code-scroll::-webkit-scrollbar{display:none}
-pre{width:max-content;white-space:pre;font-family:Consolas,Monaco,monospace;font-size:11px;line-height:1.75;color:#d7d9e3}
-.variable{color:#d7d9e3}.function{color:#55a5dc}.string{color:#c99a86}
-.copy-btn{position:absolute;top:7px;right:7px;padding:6px 10px;border:none;border-radius:9px;background:#282d52;color:#eee;font-size:11px;cursor:pointer;z-index:10}
-.copy-btn:disabled{opacity:.6;cursor:not-allowed}
-.info{text-align:center;margin-top:11px;color:#dedee5;font-size:11px;line-height:1.5}
-@media(max-width:600px){.container{width:80%;max-width:340px}}
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: #191b30;
+  color: white;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  width: 82%;
+  max-width: 350px;
+}
+
+.title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.title .icon {
+  font-size: 19px;
+}
+
+.title h1 {
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.code-box {
+  position: relative;
+  width: 100%;
+  height: 100px;
+  background: #0d101f;
+  border: 1px solid #22263c;
+  border-radius: 13px;
+  padding: 17px 13px;
+  overflow: hidden;
+}
+
+.code-scroll {
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.code-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+pre {
+  width: max-content;
+  white-space: pre;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 11px;
+  line-height: 1.75;
+  color: #d7d9e3;
+}
+
+.variable {
+  color: #d7d9e3;
+}
+
+.function {
+  color: #55a5dc;
+}
+
+.string {
+  color: #c99a86;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 9px;
+  background: #282d52;
+  color: #eee;
+  font-size: 11px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.copy-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.info {
+  text-align: center;
+  margin-top: 11px;
+  color: #dedee5;
+  font-size: 11px;
+  line-height: 1.5;
+}
 </style>
 </head>
 <body>
 <div class="container">
-<div class="title"><span class="icon">📜</span><h1>Loadstring</h1></div>
-<div class="code-box">
-<button class="copy-btn" id="copyButton" onclick="copyCode()">Copy</button>
-<div class="code-scroll"><pre id="code"></pre></div>
-</div>
-<div class="info">
-This code is protected by lurvox •<br>
-https://lurvox-security.vercel.app
-</div>
+  <div class="title">
+    <span class="icon">📜</span>
+    <h1>Loadstring</h1>
+  </div>
+  <div class="code-box">
+    <button class="copy-btn" id="copyButton" onclick="copyCode()">Copy</button>
+    <div class="code-scroll">
+      <pre id="code"></pre>
+    </div>
+  </div>
+  <div class="info">
+    This code is protected by lurvox •<br>
+    https://lurvox-security.vercel.app
+  </div>
 </div>
 <script>
 const currentUrl = window.location.href;
@@ -421,12 +520,14 @@ let isCooldown = false;
 function copyCode() {
   if (isCooldown) return;
 
-  const text = \`-- // Lurvox_Security_Service
+  const text =
+\`-- // Lurvox_Security_Service
 loadstring(game:HttpGet("\${currentUrl}"))()\`;
 
   navigator.clipboard.writeText(text);
 
   const button = document.getElementById("copyButton");
+
   isCooldown = true;
   button.disabled = true;
 
@@ -457,7 +558,6 @@ loadstring(game:HttpGet("\${currentUrl}"))()\`;
       console.error('GET API ERROR:', error);
 
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-
       return res.status(500).send(
         "warn('Internal server error')"
       );
@@ -469,10 +569,3 @@ loadstring(game:HttpGet("\${currentUrl}"))()\`;
     message: 'Method Not Allowed'
   });
 }
-'''
-
-path = "/mnt/data/obfuscate.js"
-with open(path, "w", encoding="utf-8") as f:
-    f.write(content)
-print(path)
-          
