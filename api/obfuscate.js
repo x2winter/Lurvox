@@ -22,25 +22,37 @@ export default async function handler(req, res) {
   const SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY;
   const TABLE_NAME = 'lurvox_api';
 
+  // ตรวจสอบ Environment Variables
   if (!SUPABASE_URL || !SUPABASE_KEY) {
+    console.error('Missing env vars:', {
+      hasUrl: !!SUPABASE_URL,
+      hasKey: !!SUPABASE_KEY
+    });
     return res.status(500).json({
       status: 'error',
       message: 'Supabase environment variables missing'
     });
   }
 
+  if (!SUPABASE_URL.startsWith('https://')) {
+    return res.status(500).json({
+      status: 'error',
+      message: 'Invalid SUPABASE_URL format (must start with https://)'
+    });
+  }
+
   const supabaseHeaders = {
     'Content-Type': 'application/json',
     apikey: SUPABASE_KEY,
-    Authorization: `Bearer ${SUPABASE_KEY}`   // ← แก้ตรงนี้
+    Authorization: `Bearer ${SUPABASE_KEY}`
   };
 
   // ==========================================
-  // POST
+  // POST: รับ Source Code → Obfuscate → บันทึกลง Supabase
   // ==========================================
   if (req.method === 'POST') {
     try {
-      await delay(800); // ลดหน่อยเพื่อลดโอกาส timeout
+      await delay(600);
 
       const { source, settings } = req.body || {};
 
@@ -53,7 +65,9 @@ export default async function handler(req, res) {
 
       const obfResponse = await fetch('https://goofyscator.lua.cz/obfuscate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           source,
           settings: settings || {
@@ -141,7 +155,7 @@ export default async function handler(req, res) {
   }
 
   // ==========================================
-  // GET
+  // GET: ดึงโค้ดตาม ID
   // ==========================================
   if (req.method === 'GET') {
     try {
@@ -185,13 +199,13 @@ export default async function handler(req, res) {
         userAgent.includes('scriptware') ||
         userAgent.includes('httpget');
 
-      // Executor → ส่ง plain text
+      // เรียกจาก Executor → ส่ง plain text
       if (isRobloxExecutor) {
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         return res.status(200).send(data.code);
       }
 
-      // Browser → ส่ง HTML
+      // เปิดจาก Browser → ส่งหน้า HTML
       const currentUrl = `https://\( {req.headers.host} \){req.url}`;
 
       const htmlContent = `<!DOCTYPE html>
@@ -201,7 +215,11 @@ export default async function handler(req, res) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Loadstring</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 body {
   min-height: 100vh;
   background: #191b30;
@@ -211,7 +229,10 @@ body {
   justify-content: center;
   align-items: center;
 }
-.container { width: 82%; max-width: 350px; }
+.container {
+  width: 82%;
+  max-width: 350px;
+}
 .title {
   display: flex;
   justify-content: center;
@@ -219,8 +240,13 @@ body {
   gap: 6px;
   margin-bottom: 14px;
 }
-.title .icon { font-size: 19px; }
-.title h1 { font-size: 21px; font-weight: 700; }
+.title .icon {
+  font-size: 19px;
+}
+.title h1 {
+  font-size: 21px;
+  font-weight: 700;
+}
 .code-box {
   position: relative;
   width: 100%;
@@ -238,7 +264,9 @@ body {
   overflow-y: hidden;
   scrollbar-width: none;
 }
-.code-scroll::-webkit-scrollbar { display: none; }
+.code-scroll::-webkit-scrollbar {
+  display: none;
+}
 pre {
   width: max-content;
   white-space: pre;
@@ -264,8 +292,13 @@ pre {
   cursor: pointer;
   z-index: 10;
 }
-.copy-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.copy-btn:active:not(:disabled) { transform: scale(.95); }
+.copy-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.copy-btn:active:not(:disabled) {
+  transform: scale(.95);
+}
 .info {
   text-align: center;
   margin-top: 11px;
@@ -273,65 +306,92 @@ pre {
   font-size: 11px;
   line-height: 1.5;
 }
-.info-url { color: #dedee5; }
+.info-url {
+  color: #dedee5;
+}
 @media(max-width:600px) {
-  .container { width: 80%; max-width: 340px; }
-  .title h1 { font-size: 20px; }
-  .title .icon { font-size: 18px; }
-  .code-box { height: 98px; }
-  pre { font-size: 11px; }
-  .info { font-size: 11px; }
+  .container {
+    width: 80%;
+    max-width: 340px;
+  }
+  .title h1 {
+    font-size: 20px;
+  }
+  .title .icon {
+    font-size: 18px;
+  }
+  .code-box {
+    height: 98px;
+  }
+  pre {
+    font-size: 11px;
+  }
+  .info {
+    font-size: 11px;
+  }
 }
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="title">
-    <span class="icon">📜</span>
-    <h1>Loadstring</h1>
-  </div>
-  <div class="code-box">
-    <button class="copy-btn" id="copyButton" onclick="copyCode()">Copy</button>
-    <div class="code-scroll">
-      <pre id="code"></pre>
+  <div class="container">
+    <div class="title">
+      <span class="icon">📜</span>
+      <h1>Loadstring</h1>
+    </div>
+
+    <div class="code-box">
+      <button class="copy-btn" id="copyButton" onclick="copyCode()">Copy</button>
+      <div class="code-scroll">
+        <pre id="code"></pre>
+      </div>
+    </div>
+
+    <div class="info">
+      This code is protected by lurvox •<br>
+      <span class="info-url">https://lurvox-security.vercel.app</span>
     </div>
   </div>
-  <div class="info">
-    This code is protected by lurvox •<br>
-    <span class="info-url">https://lurvox-security.vercel.app</span>
-  </div>
-</div>
-<script>
-const currentUrl = "${currentUrl}";
-const codeHTML =
+
+  <script>
+    const currentUrl = "${currentUrl}";
+
+    const codeHTML =
 \`<span class="variable">-- // Lurvox_Security_Service</span>;
 <span class="function">loadstring</span>(game:<span class="function">HttpGet</span>(<span class="string">"\${currentUrl}"</span>))()\`;
-document.getElementById("code").innerHTML = codeHTML;
 
-let isCooldown = false;
-function copyCode() {
-  if (isCooldown) return;
-  const text = \`-- // Lurvox_Security_Service
+    document.getElementById("code").innerHTML = codeHTML;
+
+    let isCooldown = false;
+
+    function copyCode() {
+      if (isCooldown) return;
+
+      const text =
+\`-- // Lurvox_Security_Service
 loadstring(game:HttpGet("\${currentUrl}"))()\`;
-  navigator.clipboard.writeText(text);
-  const button = document.getElementById("copyButton");
-  isCooldown = true;
-  button.disabled = true;
-  let timeLeft = 4;
-  button.innerText = \`Wait \${timeLeft}s\`;
-  const timer = setInterval(() => {
-    timeLeft--;
-    if (timeLeft > 0) {
+
+      navigator.clipboard.writeText(text);
+
+      const button = document.getElementById("copyButton");
+      isCooldown = true;
+      button.disabled = true;
+
+      let timeLeft = 4;
       button.innerText = \`Wait \${timeLeft}s\`;
-    } else {
-      clearInterval(timer);
-      isCooldown = false;
-      button.disabled = false;
-      button.innerText = "Copy";
+
+      const timer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft > 0) {
+          button.innerText = \`Wait \${timeLeft}s\`;
+        } else {
+          clearInterval(timer);
+          isCooldown = false;
+          button.disabled = false;
+          button.innerText = "Copy";
+        }
+      }, 1000);
     }
-  }, 1000);
-}
-</script>
+  </script>
 </body>
 </html>`;
 
