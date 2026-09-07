@@ -224,7 +224,7 @@ export default async function handler(req, res) {
               antiTamper: true,
               controlFlowFlattening: true,
               isLuauRuntime: true,
-              loaderVMDepth: 0
+              loaderVMDepth: 5
             }
           })
         }
