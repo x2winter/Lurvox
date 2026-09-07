@@ -35,10 +35,13 @@ export default async function handler(req, res) {
     Authorization: `Bearer ${SUPABASE_KEY}`
   };
 
-  // POST: Obfuscate & Save
+  // ==========================================
+  // POST: รับ Source Code -> Obfuscate -> เซฟลง Supabase
+  // ==========================================
   if (req.method === 'POST') {
     try {
       await delay(1000);
+
       const { source, settings } = req.body || {};  
 
       if (!source || typeof source !== 'string') {  
@@ -60,7 +63,7 @@ export default async function handler(req, res) {
             antiTamper: true,  
             controlFlowFlattening: true,  
             isLuauRuntime: true,  
-            loaderVMDepth: 0  
+            loaderVMDepth: 5  
           }  
         })  
       });  
@@ -134,7 +137,9 @@ export default async function handler(req, res) {
     }
   }
 
-  // GET: Fetch Code / Render UI
+  // ==========================================
+  // GET: ตรวจสอบ User-Agent & แสดงผล HTML
+  // ==========================================
   if (req.method === 'GET') {
     try {
       const id = req.query.id || req.query.scriptId;
@@ -168,87 +173,197 @@ export default async function handler(req, res) {
       const userAgent = (req.headers['user-agent'] || '').toLowerCase();  
       const isRobloxExecutor = userAgent.includes('roblox') || userAgent.includes('synapse') || userAgent.includes('krnl') || userAgent.includes('fluxus') || userAgent.includes('scriptware') || userAgent.includes('httpget');  
 
+      // 1. เรียกจาก Executor -> ส่ง Plain Text Code
       if (isRobloxExecutor) {  
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');  
         return res.status(200).send(data.code);  
       }  
 
+      // 2. เปิดผ่าน Browser -> ส่งหน้า UI HTML ใหม่
       const htmlContent = `<!DOCTYPE html>
-<html lang="th">  
-<head>  
-<meta charset="UTF-8">  
-<meta name="viewport" content="width=device-width, initial-scale=1.0">  
-<title>Loadstring</title>  
-<style>  
-* { box-sizing: border-box; margin: 0; padding: 0; }  
-body { min-height: 100vh; background: #191b30; color: white; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; }
-.container { width: 82%; max-width: 350px; }
-.title { display: flex; justify-content: center; align-items: center; gap: 6px; margin-bottom: 14px; }
-.title .icon { font-size: 19px; }
-.title h1 { font-size: 21px; font-weight: 700; }
-.code-box { position: relative; width: 100%; height: 100px; background: #0d101f; border: 1px solid #22263c; border-radius: 13px; padding: 17px 13px; overflow: hidden; }
-.code-scroll { width: 100%; height: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
-.code-scroll::-webkit-scrollbar { display: none; }
-pre { width: max-content; white-space: pre; font-family: Consolas, Monaco, monospace; font-size: 11px; line-height: 1.75; color: #d7d9e3; }
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loadstring</title>
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    background: #191b30;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    width: 82%;
+    max-width: 350px;
+}
+
+.title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.title .icon {
+    font-size: 19px;
+}
+
+.title h1 {
+    font-size: 21px;
+    font-weight: 700;
+}
+
+.code-box {
+    position: relative;
+    width: 100%;
+    height: 100px;
+    background: #0d101f;
+    border: 1px solid #22263c;
+    border-radius: 13px;
+    padding: 17px 13px;
+    overflow: hidden;
+}
+
+.code-scroll {
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+}
+
+.code-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+pre {
+    width: max-content;
+    white-space: pre;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 11px;
+    line-height: 1.75;
+    color: #d7d9e3;
+}
+
 .variable { color: #d7d9e3; }
 .function { color: #55a5dc; }
 .string { color: #c99a86; }
-.copy-btn { position: absolute; top: 7px; right: 7px; padding: 6px 10px; border: none; border-radius: 9px; background: #282d52; color: #eee; font-size: 11px; cursor: pointer; z-index: 10; }
-.copy-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.copy-btn:active:not(:disabled) { transform: scale(.95); }
-.info { text-align: center; margin-top: 11px; color: #dedee5; font-size: 11px; line-height: 1.5; }
-.info-url { color: #dedee5; }
-</style>  
-</head>  
-<body>  
-<div class="container">  
-    <div class="title">  
-        <span class="icon">📜</span>  
-        <h1>Loadstring</h1>  
-    </div>  
-    <div class="code-box">  
-        <button class="copy-btn" id="copyButton" onclick="copyCode()">Copy</button>  
-        <div class="code-scroll">  
-            <pre id="code"></pre>  
-        </div>  
-    </div>  
-    <div class="info">  
-        This code is protected by lurvox •<br>  
-        <span class="info-url">https://lurvox-security.vercel.app</span>  
+.comment { color: #70a85b; }
+
+.copy-btn {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 9px;
+    background: #282d52;
+    color: #eee;
+    font-size: 11px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.copy-btn:active {
+    transform: scale(.95);
+}
+
+.info {
+    text-align: center;
+    margin-top: 11px;
+    color: #dedee5;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.info-url {
+    color: #dedee5;
+}
+
+@media(max-width:600px) {
+    .container {
+        width: 80%;
+        max-width: 340px;
+    }
+    .title h1 {
+        font-size: 20px;
+    }
+    .title .icon {
+        font-size: 18px;
+    }
+    .code-box {
+        height: 98px;
+    }
+    pre {
+        font-size: 11px;
+    }
+    .info {
+        font-size: 11px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="title">
+        <span class="icon">📜</span>
+        <h1>Loadstring</h1>
     </div>
-</div>  
-<script>  
-const currentUrl = window.location.href;  
-document.getElementById("code").innerText = \`-- // Lurvox_Security_Service\\nloadstring(game:HttpGet("\${currentUrl}"))()\`;  
 
-let isCooldown = false;  
-function copyCode() {  
-    if (isCooldown) return;  
-    const text = \`-- // Lurvox_Security_Service\\nloadstring(game:HttpGet("\${currentUrl}"))()\`;  
-    navigator.clipboard.writeText(text);  
+    <div class="code-box">
+        <button class="copy-btn" id="copyButton" onclick="copyCode()">Copy</button>
+        <div class="code-scroll">
+            <pre id="code"></pre>
+        </div>
+    </div>
 
-    const button = document.getElementById("copyButton");  
-    isCooldown = true;  
-    button.disabled = true;  
+    <div class="info">
+        This code is protected by lurvox •<br>
+        <span class="info-url">https://lurvox-security.vercel.app</span>
+    </div>
 
-    let timeLeft = 4;  
-    button.innerText = \`Wait \${timeLeft}s\`;  
+</div>
 
-    const timer = setInterval(() => {  
-        timeLeft--;  
-        if (timeLeft > 0) {  
-            button.innerText = \`Wait \${timeLeft}s\`;  
-        } else {  
-            clearInterval(timer);  
-            isCooldown = false;  
-            button.disabled = false;  
-            button.innerText = "Copy";  
-        }  
-    }, 1000);  
-}  
-</script>  
-</body>  
-</html>`;  
+<script>
+const currentUrl = window.location.href;
+
+const codeHTML =
+'<span class="variable">-- // Lurvox_Security_Service</span><span class="string"></span>\\n' +
+'<span class="function">loadstring</span>(game:<span class="function">HttpGet</span>(<span class="string">"' + currentUrl + '"</span>))()';
+
+document.getElementById("code").innerHTML = codeHTML;
+
+function copyCode() {
+    const text = '-- // Lurvox_Security_Service\\nloadstring(game:HttpGet("' + currentUrl + '"))()';
+
+    navigator.clipboard.writeText(text);
+
+    const button = document.getElementById("copyButton");
+    button.innerText = "Copied!";
+
+    setTimeout(() => {
+        button.innerText = "Copy";
+    }, 1200);
+}
+</script>
+
+</body>
+</html>`;
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8');  
       return res.status(200).send(htmlContent);  
