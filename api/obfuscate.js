@@ -58,6 +58,7 @@ function generateLuaWrapper(source) {
   const sourceName = randomLuaName('source');
   const loaderName = randomLuaName('loader');
 
+  // เอา while true do end ออก — เป็นตัวทำให้ Goofyscator fail บ่อย
   return `local ${envName} = {}
 
 local \( {keyName} = " \){escapeLuaString(key)}"
@@ -69,89 +70,69 @@ local _concat = table.concat
 local _bxor = (bit32 or bit).bxor
 
 local function ${fakeA}(value)
-if 0 == 1 then
-return nil
-end
-
-return value
-
+  if 0 == 1 then
+    return nil
+  end
+  return value
 end
 
 local function ${fakeB}(value)
-return value
+  return value
 end
 
 local function ${decryptName}(encoded, xorKey)
-local httpService = game:GetService("HttpService")
-local raw = httpService:Base64Decode(encoded)
-local result = {}
+  local httpService = game:GetService("HttpService")
+  local raw = httpService:Base64Decode(encoded)
+  local result = {}
 
-for index = 1, #raw do
-    if 4 == 0 then
-        while true do end
-    end
-
+  for index = 1, #raw do
     local dataByte = _byte(raw, index)
     local keyByte = _byte(xorKey, ((index - 1) % #xorKey) + 1)
-
     result[index] = _char(_bxor(dataByte, keyByte))
-end
+  end
 
-return _concat(result)
-
+  return _concat(result)
 end
 
 local function ${runtimeCheck}()
-local stringAlias = string
-local charAlias = stringAlias.char
+  local stringAlias = string
+  local charAlias = stringAlias.char
 
-if charAlias == nil then
+  if charAlias == nil then
     return false
-end
+  end
 
-if false then
-    while true do end
-end
+  if false then
+    return false
+  end
 
-return true
-
+  return true
 end
 
 local function ${dynamicExecutor}(sourceCode)
-local ${loaderName} = loadstring
+  local ${loaderName} = loadstring
 
-if type(${loaderName}) \~= "function" then
+  if type(${loaderName}) \~= "function" then
     return nil
-end
+  end
 
-return ${loaderName}(sourceCode)
-
-end
-
-if 1 == 1 then
-local runtimeIdentifier = math.random(100000, 999999999)
-
-if runtimeIdentifier < 0 then
-    while true do end
-end
-
+  return ${loaderName}(sourceCode)
 end
 
 if ${runtimeCheck}() then
-local ${payloadName} = \( {fakeB}( \){dataName})
-local runtimeKey = \( {fakeA}( \){keyName})
+  local ${payloadName} = \( {fakeB}( \){dataName})
+  local runtimeKey = \( {fakeA}( \){keyName})
 
-local ${sourceName} = ${decryptName}(
+  local ${sourceName} = ${decryptName}(
     ${payloadName},
     runtimeKey
-)
+  )
 
-local executor = \( {dynamicExecutor}( \){sourceName})
+  local executor = \( {dynamicExecutor}( \){sourceName})
 
-if executor then
+  if executor then
     return executor()
-end
-
+  end
 end
 `;
 }
@@ -188,7 +169,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      await delay(1000);
+      await delay(500);
 
       const { source, settings } = req.body || {};
 
@@ -208,50 +189,77 @@ export default async function handler(req, res) {
 
       const protectedSource = generateLuaWrapper(source);
 
+      // settings ที่เสถียร (ไม่ใส่ controlFlowFlattening เพราะ UI ไม่มี)
       const defaultSettings = {
         encryptStrings: true,
         proxifyLocals: true,
         proxifyFunctions: true,
         antiTamper: true,
-        controlFlowFlattening: true,
         isLuauRuntime: true,
-        loaderVMDepth: 1          // ต้องอยู่ระหว่าง 1-5 (เดิมเป็น 0 ทำให้ fail)
+        loaderVMDepth: 1
       };
 
-      const obfResponse = await fetch(
-        'https://goofyscator.lua.cz/obfuscate',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            source: protectedSource,
-            settings: settings || defaultSettings
-          })
-        }
-      );
+      let obfData = null;
+      let lastObfError = '';
 
-      const obfText = await obfResponse.text();
-      console.log('Obfuscator status:', obfResponse.status);
-      console.log('Obfuscator response (first 600 chars):', obfText.substring(0, 600));
-
-      let obfData;
-
-      try {
-        obfData = JSON.parse(obfText);
-      } catch {
-        throw new Error(
-          `Obfuscator returned invalid response: ${obfText.substring(0, 300)}`
+      // retry 3 ครั้ง กรณี server ของ goofyscator วูบ
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const obfResponse = await fetch(
+          'https://goofyscator.lua.cz/obfuscate',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              source: protectedSource,
+              settings: settings || defaultSettings
+            })
+          }
         );
-      }
 
-      if (!obfResponse.ok || obfData.status !== 'success' || !obfData.result) {
-        throw new Error(
+        const obfText = await obfResponse.text();
+        console.log(`Obfuscator attempt ${attempt + 1} status:`, obfResponse.status);
+        console.log('Obfuscator response head:', obfText.substring(0, 400));
+
+        try {
+          obfData = JSON.parse(obfText);
+        } catch {
+          lastObfError = `Invalid JSON: ${obfText.substring(0, 300)}`;
+          await delay(1000 * (attempt + 1));
+          continue;
+        }
+
+        if (obfResponse.ok && obfData.status === 'success' && obfData.result) {
+          break;
+        }
+
+        lastObfError =
           obfData.message ||
           obfData.error ||
-          'Obfuscation failed'
-        );
+          `HTTP ${obfResponse.status}`;
+
+        // ถ้า fail เพราะ script เอง ไม่ต้อง retry เยอะ
+        if (
+          typeof lastObfError === 'string' &&
+          lastObfError.toLowerCase().includes('obfuscation failed')
+        ) {
+          // ลองลด settings อีกรอบใน attempt สุดท้าย
+          if (attempt === 1) {
+            settings && Object.assign(settings, {
+              proxifyFunctions: false,
+              antiTamper: true,
+              loaderVMDepth: 1
+            });
+          }
+        }
+
+        await delay(1000 * (attempt + 1));
+        obfData = null;
+      }
+
+      if (!obfData || obfData.status !== 'success' || !obfData.result) {
+        throw new Error(lastObfError || 'Obfuscation failed');
       }
 
       let id;
@@ -290,9 +298,7 @@ export default async function handler(req, res) {
       }
 
       if (!saved) {
-        throw new Error(
-          `Failed to save to Supabase: ${lastError}`
-        );
+        throw new Error(`Failed to save to Supabase: ${lastError}`);
       }
 
       const baseUrl = `https://${req.headers.host}`;
@@ -372,10 +378,7 @@ export default async function handler(req, res) {
         userAgent.includes('httpget');
 
       if (isRobloxExecutor) {
-        res.setHeader(
-          'Content-Type',
-          'text/plain; charset=utf-8'
-        );
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         return res.status(200).send(data.code);
       }
 
@@ -386,12 +389,7 @@ export default async function handler(req, res) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Loadstring</title>
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
+* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   min-height: 100vh;
   background: #191b30;
@@ -401,12 +399,7 @@ body {
   justify-content: center;
   align-items: center;
 }
-
-.container {
-  width: 82%;
-  max-width: 350px;
-}
-
+.container { width: 82%; max-width: 350px; }
 .title {
   display: flex;
   justify-content: center;
@@ -414,16 +407,8 @@ body {
   gap: 6px;
   margin-bottom: 14px;
 }
-
-.title .icon {
-  font-size: 19px;
-}
-
-.title h1 {
-  font-size: 21px;
-  font-weight: 700;
-}
-
+.title .icon { font-size: 19px; }
+.title h1 { font-size: 21px; font-weight: 700; }
 .code-box {
   position: relative;
   width: 100%;
@@ -434,7 +419,6 @@ body {
   padding: 17px 13px;
   overflow: hidden;
 }
-
 .code-scroll {
   width: 100%;
   height: 100%;
@@ -442,11 +426,7 @@ body {
   overflow-y: hidden;
   scrollbar-width: none;
 }
-
-.code-scroll::-webkit-scrollbar {
-  display: none;
-}
-
+.code-scroll::-webkit-scrollbar { display: none; }
 pre {
   width: max-content;
   white-space: pre;
@@ -455,19 +435,9 @@ pre {
   line-height: 1.75;
   color: #d7d9e3;
 }
-
-.variable {
-  color: #d7d9e3;
-}
-
-.function {
-  color: #55a5dc;
-}
-
-.string {
-  color: #c99a86;
-}
-
+.variable { color: #d7d9e3; }
+.function { color: #55a5dc; }
+.string { color: #c99a86; }
 .copy-btn {
   position: absolute;
   top: 7px;
@@ -481,12 +451,7 @@ pre {
   cursor: pointer;
   z-index: 10;
 }
-
-.copy-btn:disabled {
-  opacity: .6;
-  cursor: not-allowed;
-}
-
+.copy-btn:disabled { opacity: .6; cursor: not-allowed; }
 .info {
   text-align: center;
   margin-top: 11px;
@@ -532,7 +497,6 @@ loadstring(game:HttpGet("\${currentUrl}"))()\`;
   navigator.clipboard.writeText(text);
 
   const button = document.getElementById("copyButton");
-
   isCooldown = true;
   button.disabled = true;
 
@@ -541,7 +505,6 @@ loadstring(game:HttpGet("\${currentUrl}"))()\`;
 
   const timer = setInterval(() => {
     timeLeft--;
-
     if (timeLeft > 0) {
       button.innerText = \`Wait \${timeLeft}s\`;
     } else {
