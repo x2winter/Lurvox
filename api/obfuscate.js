@@ -208,6 +208,16 @@ export default async function handler(req, res) {
 
       const protectedSource = generateLuaWrapper(source);
 
+      const defaultSettings = {
+        encryptStrings: true,
+        proxifyLocals: true,
+        proxifyFunctions: true,
+        antiTamper: true,
+        controlFlowFlattening: true,
+        isLuauRuntime: true,
+        loaderVMDepth: 1          // ต้องอยู่ระหว่าง 1-5 (เดิมเป็น 0 ทำให้ fail)
+      };
+
       const obfResponse = await fetch(
         'https://goofyscator.lua.cz/obfuscate',
         {
@@ -217,17 +227,15 @@ export default async function handler(req, res) {
           },
           body: JSON.stringify({
             source: protectedSource,
-            settings: settings || {
-  encryptStrings: true,
-  proxifyLocals: true,
-  proxifyFunctions: true,
-  antiTamper: true,
-  controlFlowFlattening: true,
-  isLuauRuntime: true,
-  loaderVMDepth: 5          // เปลี่ยนจาก 0 เป็น 1 (หรือ 2-3 ก็ได้)
-            }
+            settings: settings || defaultSettings
+          })
+        }
+      );
 
       const obfText = await obfResponse.text();
+      console.log('Obfuscator status:', obfResponse.status);
+      console.log('Obfuscator response (first 600 chars):', obfText.substring(0, 600));
+
       let obfData;
 
       try {
