@@ -218,17 +218,14 @@ export default async function handler(req, res) {
           body: JSON.stringify({
             source: protectedSource,
             settings: settings || {
-              encryptStrings: true,
-              proxifyLocals: true,
-              proxifyFunctions: true,
-              antiTamper: true,
-              controlFlowFlattening: true,
-              isLuauRuntime: true,
-              loaderVMDepth: 5
+  encryptStrings: true,
+  proxifyLocals: true,
+  proxifyFunctions: true,
+  antiTamper: true,
+  controlFlowFlattening: true,
+  isLuauRuntime: true,
+  loaderVMDepth: 5          // เปลี่ยนจาก 0 เป็น 1 (หรือ 2-3 ก็ได้)
             }
-          })
-        }
-      );
 
       const obfText = await obfResponse.text();
       let obfData;
