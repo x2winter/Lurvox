@@ -36,7 +36,7 @@ export default async function handler(req, res) {
   };
 
   // ==========================================
-  // POST: รับ Source Code -> Obfuscate -> เซฟลง Supabase
+  // POST: รับ Source Code -> ใส่ Loader Protection -> Obfuscate -> เซฟลง Supabase
   // ==========================================
   if (req.method === 'POST') {
     try {
@@ -51,11 +51,148 @@ export default async function handler(req, res) {
         });  
       }  
 
+      // รวม Protection Loader เข้ากับ User Source Code
+      const combinedSource = `
+local Protection = {}
+
+local Original = {
+    type = type,
+    tostring = tostring,
+    tonumber = tonumber,
+    pcall = pcall,
+    xpcall = xpcall,
+    pairs = pairs,
+    ipairs = ipairs,
+    next = next,
+    rawget = rawget,
+    rawset = rawset,
+    rawequal = rawequal,
+
+    string_char = string.char,
+    string_byte = string.byte,
+    string_sub = string.sub,
+    string_find = string.find,
+
+    table_concat = table.concat,
+    table_insert = table.insert,
+
+    math_random = math.random,
+}
+
+local function Fail(reason)
+    warn("[Protection] Failed:", reason or "Unknown")
+    while true do
+        task.wait(9e9)
+    end
+end
+
+local function RuntimeCheck()
+    return type(string) == "table"
+        and type(table) == "table"
+        and type(math) == "table"
+        and game ~= nil
+end
+
+local function EnvironmentCheck()
+    if not game then return false end
+    if type(game.GetService) ~= "function" then return false end
+
+    local success, players = pcall(function()
+        return game:GetService("Players")
+    end)
+
+    return success and players ~= nil
+end
+
+local function AntiHook()
+    local checks = {
+        type == Original.type,
+        tostring == Original.tostring,
+        tonumber == Original.tonumber,
+        pcall == Original.pcall,
+        xpcall == Original.xpcall,
+        pairs == Original.pairs,
+        ipairs == Original.ipairs,
+        next == Original.next,
+        rawget == Original.rawget,
+        rawset == Original.rawset,
+        rawequal == Original.rawequal,
+
+        string.char == Original.string_char,
+        string.byte == Original.string_byte,
+        string.sub == Original.string_sub,
+        string.find == Original.string_find,
+
+        table.concat == Original.table_concat,
+        table.insert == Original.table_insert,
+
+        math.random == Original.math_random,
+    }
+
+    for _, valid in ipairs(checks) do
+        if not valid then
+            return false
+        end
+    end
+
+    return true
+end
+
+function Protection.Validate()
+    if not RuntimeCheck() then
+        return false, "RuntimeCheck"
+    end
+    if not EnvironmentCheck() then
+        return false, "EnvironmentCheck"
+    end
+    if not AntiHook() then
+        return false, "AntiHook"
+    end
+
+    return true
+end
+
+function Protection.StartMonitor()
+    task.spawn(function()
+        while true do
+            task.wait(math.random(4, 8))
+
+            local success, result, reason = pcall(function()
+                return Protection.Validate()
+            end)
+
+            if not success or not result then
+                Fail(reason or "Monitor failed")
+                return
+            end
+        end
+    end)
+end
+
+-- ตรวจสอบครั้งแรก
+local ok, result, reason = pcall(function()
+    return Protection.Validate()
+end)
+
+if not ok or not result then
+    Fail(reason or "Initial validation failed")
+end
+
+Protection.StartMonitor()
+
+-- ==========================================
+-- USER SOURCE CODE GOES HERE
+-- ==========================================
+${source}
+
+return Protection
+`;
+
       const obfResponse = await fetch('https://goofyscator.lua.cz/obfuscate', {  
         method: 'POST',  
         headers: { 'Content-Type': 'application/json' },  
         body: JSON.stringify({  
-          source,  
+          source: combinedSource,  
           settings: settings || {  
             encryptStrings: true,  
             proxifyLocals: true,  
@@ -268,7 +405,7 @@ pre {
     right: 7px;
     padding: 6px 10px;
     border: none;
-    border-radius: 9px;
+    border-radius: 99px;
     background: #282d52;
     color: #eee;
     font-size: 11px;
@@ -379,4 +516,4 @@ function copyCode() {
     status: 'error',
     message: 'Method Not Allowed'
   });
-                      }
+}
